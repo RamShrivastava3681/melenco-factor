@@ -4,6 +4,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IEntity extends Document {
   entityId: string;
   name: string;
+  currency: 'USD' | 'EUR' | 'GBP';
   type: 'supplier' | 'buyer';
   status: 'active' | 'inactive' | 'suspended';
   riskCategory: 'low' | 'medium' | 'high';
@@ -153,6 +154,7 @@ export interface INOA extends Document {
 const EntitySchema = new Schema({
   entityId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
+  currency: { type: String, enum: ['USD', 'EUR', 'GBP'], default: 'USD' },
   type: { type: String, enum: ['supplier', 'buyer'], required: true },
   status: { type: String, enum: ['active', 'inactive', 'suspended'], default: 'active' },
   riskCategory: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
@@ -333,7 +335,18 @@ const PayoutRecordSchema = new Schema({
   reference: { type: String, required: true },
   method: { type: String, default: 'bank_transfer' },
   type: { type: String, enum: ['advance_payment', 'reserve_payment'], default: 'advance_payment' },
-  notes: { type: String }
+  notes: { type: String },
+  paymentInstruction: {
+    serialNumber: { type: String },
+    transactionType: { type: String },
+    paymentAccountNumber: { type: String },
+    beneficiaryAccountNumber: { type: String },
+    effectiveDate: { type: String },
+    remarks: { type: String },
+    currency: { type: String },
+    amount: { type: Number },
+    paymentProofFileName: { type: String }
+  }
 }, {
   timestamps: true
 });
@@ -361,6 +374,17 @@ export interface IPayoutRecord extends Document {
   method: string;
   type?: 'advance_payment' | 'reserve_payment';
   notes?: string;
+  paymentInstruction?: {
+    serialNumber?: string;
+    transactionType?: string;
+    paymentAccountNumber?: string;
+    beneficiaryAccountNumber?: string;
+    effectiveDate?: string;
+    remarks?: string;
+    currency?: string;
+    amount?: number;
+    paymentProofFileName?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }

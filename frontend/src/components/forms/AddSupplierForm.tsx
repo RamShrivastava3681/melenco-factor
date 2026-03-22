@@ -803,12 +803,19 @@ export function AddSupplierForm({ onSubmit, onCancel }: AddSupplierFormProps) {
             
             <div>
               <Label htmlFor="currency">Currency</Label>
-              <Input
-                id="currency"
+              <Select
                 value={formData.currency}
-                onChange={(e) => handleInputChange('currency', e.target.value)}
-                placeholder="USD"
-              />
+                onValueChange={(value) => handleInputChange('currency', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div>

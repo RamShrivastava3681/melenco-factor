@@ -62,6 +62,8 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
   const [availablePaymentTerms, setAvailablePaymentTerms] = useState<any[]>([]);
   const [supplierFees, setSupplierFees] = useState<any>(null);
 
+  const getEntityCurrency = (entity: any) => String(entity?.currency || entity?.bankDetails?.currency || 'USD').toUpperCase();
+
   // Helper function to get payment terms from supplier's transaction fees
   const getSupplierPaymentTerms = (transactionFees: any) => {
     console.log('Processing transaction fees:', transactionFees);
@@ -435,6 +437,9 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
       const selectedSupplier = suppliers.find(s => (s.id || s._id) === value);
       setSelectedSupplier(selectedSupplier || null);
       updatedData.supplierName = selectedSupplier ? selectedSupplier.name : '';
+
+      const supplierCurrency = selectedSupplier ? getEntityCurrency(selectedSupplier) : 'USD';
+      updatedData.currency = supplierCurrency;
       
       console.log('Selected Supplier Full Object:', selectedSupplier);
       
@@ -444,7 +449,8 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
           buyer.supplierLimits && 
           buyer.supplierLimits.some((sl: any) => sl.supplierId === (selectedSupplier.id || selectedSupplier._id))
         );
-        setFilteredBuyers(linkedBuyers);
+        const sameCurrencyBuyers = linkedBuyers.filter((buyer) => getEntityCurrency(buyer) === supplierCurrency);
+        setFilteredBuyers(sameCurrencyBuyers);
         console.log('Filtered buyers for supplier:', linkedBuyers);
         
         // Store all supplier fee information
@@ -516,6 +522,17 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
     // Handle buyer selection
     if (field === 'buyerId') {
       const selectedBuyer = buyers.find(b => (b.id || b._id) === value);
+
+       if (selectedBuyer && selectedSupplier) {
+        const supplierCurrency = getEntityCurrency(selectedSupplier);
+        const buyerCurrency = getEntityCurrency(selectedBuyer);
+        if (supplierCurrency !== buyerCurrency) {
+          toast.error(`Buyer currency (${buyerCurrency}) must match supplier currency (${supplierCurrency})`);
+          return;
+        }
+        updatedData.currency = supplierCurrency;
+      }
+
       setSelectedBuyer(selectedBuyer || null);
       updatedData.buyerName = selectedBuyer ? selectedBuyer.name : '';
       updatedData.buyerEmail = selectedBuyer ? (selectedBuyer.email || selectedBuyer.contactEmail || '') : '';
@@ -750,6 +767,24 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
     if (!formData.supplierId || !formData.buyerId) {
       toast.error('Please select both supplier and buyer', {
         description: 'Both supplier and buyer are required to create a transaction.'
+      });
+      return;
+    }
+
+    const allowedCurrencies = ['USD', 'EUR', 'GBP'];
+    const transactionCurrency = String(formData.currency || 'USD').toUpperCase();
+    if (!allowedCurrencies.includes(transactionCurrency)) {
+      toast.error('Invalid currency', {
+        description: 'Allowed currencies are USD, EUR, GBP.'
+      });
+      return;
+    }
+
+    const supplierCurrency = getEntityCurrency(selectedSupplier);
+    const buyerCurrency = getEntityCurrency(selectedBuyer);
+    if (supplierCurrency !== buyerCurrency || transactionCurrency !== supplierCurrency) {
+      toast.error('Currency mismatch', {
+        description: `Supplier (${supplierCurrency}), Buyer (${buyerCurrency}), and Transaction (${transactionCurrency}) currencies must match.`
       });
       return;
     }
@@ -1261,16 +1296,16 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
                     value={formData.currency}
                     onValueChange={(value) => handleInputChange('currency', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger disabled>
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="EUR">EUR</SelectItem>
                       <SelectItem value="GBP">GBP</SelectItem>
-                      <SelectItem value="JPY">JPY</SelectItem>
                     </SelectContent>
                   </Select>
+                  <small className="text-gray-500 text-xs mt-1 block">Auto-set from selected supplier/buyer currency</small>
                 </div>
               </div>
             </CardContent>

@@ -22,6 +22,7 @@ import monitoringRoutes from './routes/monitoring';
 import reportsRoutes from './routes/reports';
 import notificationsRoutes from './routes/notifications';
 import noaRoutes from './routes/noa';
+import currencyRoutes from './routes/currency';
 // Load environment variables
 dotenv.config();
 // Create Express app and HTTP server
@@ -91,8 +92,28 @@ app.use(helmet({
   },
 }));
 // CORS configuration
+const configuredOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = new Set([
+  ...configuredOrigins,
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://factor.whizunikhub.com'
+]);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 // Rate limiting
@@ -131,6 +152,7 @@ app.use('/api/monitoring', monitoringRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/noa', noaRoutes);
+app.use('/api/currency', currencyRoutes);
 // Error handling middleware
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', error);

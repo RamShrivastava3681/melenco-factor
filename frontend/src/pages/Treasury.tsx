@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { createApiUrl, getApiHeaders } from '@/config/api';
 import { formatDate, getDaysDifference } from '@/lib/utils';
@@ -100,6 +103,18 @@ interface OpenInvoice {
   fundingDate: string;
 }
 
+interface TreasuryPaymentForm {
+  serialNumber: string;
+  transactionType: string;
+  paymentAccountNumber: string;
+  beneficiaryAccountNumber: string;
+  effectiveDate: string;
+  remarks: string;
+  currency: string;
+  amount: string;
+  paymentProofFileName: string;
+}
+
 export default function Treasury() {
   const [activeTab, setActiveTab] = useState('open-invoices');
   const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>([]);
@@ -120,6 +135,17 @@ export default function Treasury() {
   const [paymentCompletionOpen, setPaymentCompletionOpen] = useState(false);
   const [completedPayout, setCompletedPayout] = useState<any>(null);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [treasuryPaymentForm, setTreasuryPaymentForm] = useState<TreasuryPaymentForm>({
+    serialNumber: '',
+    transactionType: 'bank_transfer',
+    paymentAccountNumber: '',
+    beneficiaryAccountNumber: '',
+    effectiveDate: new Date().toISOString().split('T')[0],
+    remarks: '',
+    currency: 'USD',
+    amount: '',
+    paymentProofFileName: ''
+  });
 
   useEffect(() => {
     fetchSupplierPayments();
@@ -284,11 +310,52 @@ export default function Treasury() {
 
   const handleProcessPayout = async (payment: SupplierPayment) => {
     setSelectedPayment(payment);
+    setTreasuryPaymentForm({
+      serialNumber: '',
+      transactionType: 'bank_transfer',
+      paymentAccountNumber: '',
+      beneficiaryAccountNumber: payment.bankDetails?.accountNumber || '',
+      effectiveDate: new Date().toISOString().split('T')[0],
+      remarks: '',
+      currency: payment.bankDetails?.currency || 'USD',
+      amount: String(payment.pendingAmount || ''),
+      paymentProofFileName: ''
+    });
     setBankConfirmationOpen(true);
+  };
+
+  const validateTreasuryPaymentForm = () => {
+    const requiredFields: Array<keyof TreasuryPaymentForm> = [
+      'serialNumber',
+      'transactionType',
+      'paymentAccountNumber',
+      'beneficiaryAccountNumber',
+      'effectiveDate',
+      'currency',
+      'amount'
+    ];
+
+    const missing = requiredFields.filter((field) => !treasuryPaymentForm[field] || String(treasuryPaymentForm[field]).trim() === '');
+    if (missing.length > 0) {
+      toast.error(`Please fill required fields: ${missing.join(', ')}`);
+      return false;
+    }
+
+    const parsedAmount = parseFloat(treasuryPaymentForm.amount);
+    if (!parsedAmount || parsedAmount <= 0) {
+      toast.error('Amount must be greater than 0');
+      return false;
+    }
+
+    return true;
   };
 
   const confirmAndProcessPayout = async () => {
     if (!selectedPayment) return;
+
+    if (!validateTreasuryPaymentForm()) {
+      return;
+    }
 
     try {
       setProcessing(selectedPayment.supplierId);
@@ -298,7 +365,18 @@ export default function Treasury() {
         supplierId: selectedPayment.supplierId,
         amount: selectedPayment.pendingAmount,
         transactionIds: selectedPayment.transactions.map(t => t.transactionId || t.id),
-        bankDetails: selectedPayment.bankDetails
+        bankDetails: selectedPayment.bankDetails,
+        paymentInstruction: {
+          serialNumber: treasuryPaymentForm.serialNumber,
+          transactionType: treasuryPaymentForm.transactionType,
+          paymentAccountNumber: treasuryPaymentForm.paymentAccountNumber,
+          beneficiaryAccountNumber: treasuryPaymentForm.beneficiaryAccountNumber,
+          effectiveDate: treasuryPaymentForm.effectiveDate,
+          remarks: treasuryPaymentForm.remarks,
+          currency: treasuryPaymentForm.currency,
+          amount: parseFloat(treasuryPaymentForm.amount),
+          paymentProofFileName: treasuryPaymentForm.paymentProofFileName
+        }
       };
       
       console.log('Sending payout data:', payoutData);
@@ -648,7 +726,7 @@ export default function Treasury() {
                             )}
                             <p className="text-sm border-t pt-1">
                               <span className="text-muted-foreground">Buyer owes: </span>
-                              <span className="font-medium">{formatCurrency(invoice.buyerOwes || invoice.netPaidToSupplier || (invoice.advanceAmount - (invoice.feeAmount || 0)))}</span>
+                              <span className="font-medium">{formatCurrency(invoice.invoiceAmount)}</span>
                             </p>
                             <p className="text-sm">
                               <span className="text-muted-foreground">Paid: </span>
@@ -1294,7 +1372,7 @@ export default function Treasury() {
 
       {/* Bank Account Confirmation Dialog */}
       <Dialog open={bankConfirmationOpen} onOpenChange={setBankConfirmationOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-financial-navy flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-amber-500" />
@@ -1349,6 +1427,109 @@ export default function Treasury() {
                   <div>
                     <span className="text-muted-foreground">IFSC: </span>
                     <span className="font-medium">{selectedPayment.bankDetails?.ifscCode || 'IFSC pending'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg border">
+                <h3 className="font-semibold text-financial-navy mb-3">Treasury Payment Form</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <Label htmlFor="serialNumber">Serial Number *</Label>
+                    <Input
+                      id="serialNumber"
+                      value={treasuryPaymentForm.serialNumber}
+                      onChange={(e) => setTreasuryPaymentForm(prev => ({ ...prev, serialNumber: e.target.value }))}
+                      placeholder="Enter serial number"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="transactionType">Transaction Type *</Label>
+                    <Input
+                      id="transactionType"
+                      value={treasuryPaymentForm.transactionType}
+                      onChange={(e) => setTreasuryPaymentForm(prev => ({ ...prev, transactionType: e.target.value }))}
+                      placeholder="e.g. bank_transfer"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="paymentAccountNumber">Payment Account Number *</Label>
+                    <Input
+                      id="paymentAccountNumber"
+                      value={treasuryPaymentForm.paymentAccountNumber}
+                      onChange={(e) => setTreasuryPaymentForm(prev => ({ ...prev, paymentAccountNumber: e.target.value }))}
+                      placeholder="Enter payment account number"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="beneficiaryAccountNumber">Beneficiary Account Number *</Label>
+                    <Input
+                      id="beneficiaryAccountNumber"
+                      value={treasuryPaymentForm.beneficiaryAccountNumber}
+                      onChange={(e) => setTreasuryPaymentForm(prev => ({ ...prev, beneficiaryAccountNumber: e.target.value }))}
+                      placeholder="Enter beneficiary account number"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="effectiveDate">Effective Date *</Label>
+                    <Input
+                      id="effectiveDate"
+                      type="date"
+                      value={treasuryPaymentForm.effectiveDate}
+                      onChange={(e) => setTreasuryPaymentForm(prev => ({ ...prev, effectiveDate: e.target.value }))}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="currency">Currency *</Label>
+                    <Input
+                      id="currency"
+                      value={treasuryPaymentForm.currency}
+                      onChange={(e) => setTreasuryPaymentForm(prev => ({ ...prev, currency: e.target.value }))}
+                      placeholder="USD"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="amount">Amount *</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={treasuryPaymentForm.amount}
+                      onChange={(e) => setTreasuryPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="Enter amount"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="remarks">Remarks</Label>
+                    <Textarea
+                      id="remarks"
+                      value={treasuryPaymentForm.remarks}
+                      onChange={(e) => setTreasuryPaymentForm(prev => ({ ...prev, remarks: e.target.value }))}
+                      placeholder="Enter remarks"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="paymentProof">Attach Payment Proof</Label>
+                    <Input
+                      id="paymentProof"
+                      type="file"
+                      onChange={(e) => {
+                        const fileName = e.target.files && e.target.files[0] ? e.target.files[0].name : '';
+                        setTreasuryPaymentForm(prev => ({ ...prev, paymentProofFileName: fileName }));
+                      }}
+                    />
+                    {treasuryPaymentForm.paymentProofFileName && (
+                      <p className="text-xs text-muted-foreground mt-1">Attached: {treasuryPaymentForm.paymentProofFileName}</p>
+                    )}
                   </div>
                 </div>
               </div>

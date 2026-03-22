@@ -1,101 +1,75 @@
-import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Users,
   FileText,
-  Settings2,
   Landmark,
   Bell,
   BarChart3,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
+  LogOut,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
-  { title: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { title: 'Suppliers & Buyers', icon: Users, path: '/entities' },
   { title: 'Transactions', icon: FileText, path: '/transactions' },
   { title: 'Treasury', icon: Landmark, path: '/treasury' },
   { title: 'Monitoring', icon: Bell, path: '/monitoring' },
   { title: 'Reports', icon: BarChart3, path: '/reports' },
-  { title: 'Settings', icon: Settings, path: '/settings' },
 ];
 
 export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const { logout } = useAuth();
   const location = useLocation();
 
   return (
-    <aside
-      className={cn(
-        'flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out',
-        collapsed ? 'w-16' : 'w-64'
-      )}
-    >
+    <aside className="fixed left-0 top-0 z-40 w-72 h-screen flex flex-col bg-gradient-to-b from-indigo-700 via-violet-700 to-blue-700 text-white shadow-2xl">
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center p-1">
-              <img 
-                src="/logo-vertical-light (2).png" 
-                alt="Whizunik Logo" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <span className="font-semibold text-sm">Whizunik Factoring</span>
-          </div>
-        )}
-        {collapsed && (
-          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mx-auto p-1">
-            <img 
-              src="/logo-vertical-light (2).png" 
-              alt="Whizunik Logo" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-        )}
+      <div className="h-20 flex items-center px-6 border-b border-white/15">
+        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center p-1.5 shadow-lg">
+          <img
+            src="/logo-vertical-light (2).png"
+            alt="Whizunik Logo"
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <span className="ml-3 text-xl font-semibold tracking-wide">Whizunik</span>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-5 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = item.path === '/dashboard'
+            ? location.pathname === '/dashboard' || location.pathname === '/'
+            : location.pathname === item.path;
+
           return (
             <NavLink
-              key={item.path}
+              key={`${item.title}-${item.path}`}
               to={item.path}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                'flex items-center gap-3 px-4 py-3 rounded-full text-sm font-medium transition-all duration-200 hover:translate-x-0.5',
                 isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                  ? 'bg-white text-indigo-700 shadow-lg'
+                  : 'text-white/85 hover:bg-white/15 hover:text-white'
               )}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span>{item.title}</span>}
+              <span>{item.title}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      {/* Collapse Button */}
-      <div className="p-2 border-t border-sidebar-border">
+      <div className="p-4 border-t border-white/15">
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+          onClick={logout}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full text-sm font-medium text-white/90 hover:bg-white/15 hover:text-white transition-colors"
         >
-          {collapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
-            <>
-              <ChevronLeft className="w-5 h-5" />
-              <span>Collapse</span>
-            </>
-          )}
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
         </button>
       </div>
     </aside>

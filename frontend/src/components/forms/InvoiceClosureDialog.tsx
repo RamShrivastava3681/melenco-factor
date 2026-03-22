@@ -259,7 +259,7 @@ export default function InvoiceClosureDialog({ invoice, onInvoiceClosed, onClose
 
     setLoading(true);
     try {
-      const response = await fetch(createApiUrl('/treasury/reserves'), {
+      const response = await fetch(createApiUrl(`/treasury/open-invoices/${invoice.id}/close`), {
         method: 'POST',
         headers: {
           ...getApiHeaders(),

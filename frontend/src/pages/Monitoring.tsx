@@ -65,12 +65,17 @@ interface RiskIndicator {
 interface OpenInvoice {
   id: string;
   transactionId?: string;
+  invoiceNumber?: string;
   payoutId: string;
   supplierId: string;
   supplierName: string;
+  buyerName?: string;
   invoiceAmount: number;
+  advanceAmount?: number;
+  feeAmount?: number;
   paidAmount: number;
   remainingAmount: number;
+  invoiceDate?: string;
   dueDate: string;
   status: 'pending' | 'partially_paid' | 'paid' | 'overdue' | 'closed' | 'expired' | 'pending_reserves';
   agingDays: number;
@@ -251,8 +256,28 @@ export default function Monitoring() {
 
       if (response.ok) {
         const result = await response.json();
-        setOpenInvoices(result.data || []);
-        setInvoiceSummary(result.summary || {
+        const openInvoiceData = result.data || [];
+        const invoiceAmountBasedOutstanding = openInvoiceData.reduce(
+          (sum: number, invoice: any) => sum + Math.max(0, (invoice.invoiceAmount || 0) - (invoice.paidAmount || 0)),
+          0
+        );
+
+        setOpenInvoices(openInvoiceData);
+        setInvoiceSummary({
+          ...(result.summary || {
+            total: 0,
+            pending: 0,
+            overdue: 0,
+            partiallyPaid: 0,
+            totalAmount: 0,
+            totalRemaining: 0,
+            totalReserves: 0
+          }),
+          totalRemaining: invoiceAmountBasedOutstanding
+        });
+      } else {
+        setOpenInvoices([]);
+        setInvoiceSummary({
           total: 0,
           pending: 0,
           overdue: 0,
@@ -269,13 +294,22 @@ export default function Monitoring() {
     }
   };
 
-  const handlePaymentRecorded = (updatedInvoice: OpenInvoice, payment: any) => {
-    setOpenInvoices(prev => 
-      prev.filter(invoice => invoice && invoice.id).map(invoice => 
-        invoice.id === updatedInvoice.id ? updatedInvoice : invoice
-      )
+  const handlePaymentRecorded = (updatedInvoice: OpenInvoice | null | undefined, payment: any) => {
+    if (!updatedInvoice || (!updatedInvoice.id && !updatedInvoice.invoiceNumber && !updatedInvoice.transactionId)) {
+      loadOpenInvoices();
+      return;
+    }
+
+    setOpenInvoices((prev) =>
+      prev
+        .filter((invoice) => invoice && (invoice.id || invoice.invoiceNumber || invoice.transactionId))
+        .map((invoice) => {
+          const invoiceKey = invoice.id || invoice.invoiceNumber || invoice.transactionId;
+          const updatedKey = updatedInvoice.id || updatedInvoice.invoiceNumber || updatedInvoice.transactionId;
+          return invoiceKey === updatedKey ? { ...invoice, ...updatedInvoice } : invoice;
+        })
     );
-    loadOpenInvoices(); // Refresh to get updated summary
+    loadOpenInvoices();
   };
 
   const handleInvoiceClosed = (closedInvoice: OpenInvoice) => {
@@ -364,6 +398,20 @@ export default function Monitoring() {
         {displayStatus}
       </Badge>
     );
+  };
+
+  const getInvoiceAgeDays = (invoice: OpenInvoice) => {
+    const baseDate = invoice.invoiceDate || invoice.createdAt || invoice.updatedAt;
+    if (!baseDate) return 0;
+    const parsedDate = new Date(baseDate);
+    if (isNaN(parsedDate.getTime())) return 0;
+    return Math.max(0, Math.floor((Date.now() - parsedDate.getTime()) / (1000 * 60 * 60 * 24)));
+  };
+
+  const getAdvancePercentage = (invoice: OpenInvoice) => {
+    if (!invoice.invoiceAmount || invoice.invoiceAmount <= 0) return 0;
+    const advanceAmount = invoice.advanceAmount || 0;
+    return (advanceAmount / invoice.invoiceAmount) * 100;
   };
 
   const loadMonitoringData = async () => {
@@ -1033,26 +1081,31 @@ export default function Monitoring() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice ID</TableHead>
-                      <TableHead>Supplier Name</TableHead>
+                      <TableHead>Transaction ID</TableHead>
+                      <TableHead>Invoice Number</TableHead>
                       <TableHead>Buyer Name</TableHead>
-                      <TableHead>Buyer Owes</TableHead>
-                      <TableHead>Advance Paid</TableHead>
+                      <TableHead>Supplier Name</TableHead>
+                      <TableHead>Invoice Amount</TableHead>
+                      <TableHead>Invoice Date</TableHead>
+                      <TableHead>Invoice Due Date</TableHead>
+                      <TableHead>Advance Percentage</TableHead>
+                      <TableHead>Advance Amount</TableHead>
                       <TableHead>Reserves Held</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Invoice Aging</TableHead>
+                      <TableHead>Fee deducted</TableHead>
+                      <TableHead>Invoice Age</TableHead>
                       <TableHead>Amount Received</TableHead>
                       <TableHead>Date Received</TableHead>
                       <TableHead>Late Days</TableHead>
                       <TableHead>Late Fees</TableHead>
+                      <TableHead>Reserves Paid</TableHead>
+                      <TableHead>Total Fees</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {openInvoices.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={19} className="text-center py-8 text-muted-foreground">
                           No open invoices found
                         </TableCell>
                       </TableRow>
@@ -1060,67 +1113,53 @@ export default function Monitoring() {
                       openInvoices.filter(invoice => invoice && invoice.id).map((invoice) => (
                         <TableRow key={invoice.id}>
                           <TableCell>
-                            <div className="font-mono text-sm">{invoice.id}</div>
-                            <div className="text-xs text-muted-foreground">{invoice.reference}</div>
+                            <div className="font-mono text-sm">{invoice.id || 'N/A'}</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">{invoice.supplierName}</div>
-                            <div className="text-xs text-muted-foreground">ID: {invoice.supplierId}</div>
+                            <div className="font-medium">{invoice.invoiceNumber || 'N/A'}</div>
+                            <div className="text-xs text-muted-foreground">Buyer: {invoice.buyerName || 'N/A'}</div>
+                            <div className="text-xs text-muted-foreground">Supplier: {invoice.supplierName || 'N/A'}</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">Tech Corp Ltd</div>
-                            <div className="text-xs text-muted-foreground">Buyer</div>
+                            <div className="text-sm">{invoice.buyerName || 'N/A'}</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">
-                              ${(invoice.buyerOwes || invoice.netPaidToSupplier || 0).toLocaleString()}
+                            <div className="text-sm">{invoice.supplierName || 'N/A'}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">${(invoice.invoiceAmount || 0).toLocaleString()}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">{formatDate(invoice.invoiceDate || invoice.createdAt)}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className={`text-sm font-medium ${invoice.agingDays > 0 ? 'text-red-600' : ''}`}>
+                              {formatDate(invoice.dueDate)}
                             </div>
-                            <div className="text-xs text-muted-foreground">Net amount</div>
                           </TableCell>
                           <TableCell>
-                            <div className="text-green-600 font-medium">
-                              ${(invoice.advanceAmount || 0).toLocaleString()}
-                            </div>
-                            <div className="text-xs text-muted-foreground">To supplier</div>
+                            <div className="text-sm">{getAdvancePercentage(invoice).toFixed(2)}%</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-green-600 font-medium">${(invoice.advanceAmount || 0).toLocaleString()}</div>
                           </TableCell>
                           <TableCell>
                             <div className="text-purple-600 font-medium">
                               ${(invoice.reserves || 0).toLocaleString()}
                             </div>
-                            <div className="text-xs text-muted-foreground">Held</div>
                           </TableCell>
                           <TableCell>
-                            <div className={`text-sm font-medium ${
-                              invoice.agingDays > 0 ? 'text-red-600' : ''
-                            }`}>
-                              {formatDate(invoice.dueDate)}
-                            </div>
+                            <div className="text-sm">${(invoice.feeAmount || 0).toLocaleString()}</div>
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
-                              {invoice.agingDays > 0 ? (
-                                <div className="text-red-600 font-medium">
-                                  {invoice.agingDays} days overdue
-                                </div>
-                              ) : invoice.agingDays < 0 ? (
-                                <div className="text-blue-600 font-medium">
-                                  {Math.abs(invoice.agingDays)} days remaining
-                                </div>
-                              ) : (
-                                <div className="text-orange-600 font-medium">
-                                  Due today
-                                </div>
-                              )}
+                              {getInvoiceAgeDays(invoice)} day(s)
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            {getInvoiceStatusBadge(invoice.status)}
                           </TableCell>
                           <TableCell>
                             <div className="text-blue-600 font-medium">
                               ${(invoice.paidAmount || 0).toLocaleString()}
                             </div>
-                            <div className="text-xs text-muted-foreground">From buyer</div>
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
@@ -1144,17 +1183,18 @@ export default function Monitoring() {
                           <TableCell>
                             <div className="text-sm">
                               {(invoice.lateFees || 0) > 0 ? (
-                                <div>
-                                  <div className="font-medium text-red-600">
-                                    ${(invoice.lateFees || 0).toLocaleString()}
-                                  </div>
-                                  <div className="text-xs text-red-500">
-                                    Applied
-                                  </div>
-                                </div>
+                                <div className="font-medium text-red-600">${(invoice.lateFees || 0).toLocaleString()}</div>
                               ) : (
                                 <span className="text-gray-400">$0</span>
                               )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">$0</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              ${((invoice.feeAmount || 0) + (invoice.lateFees || 0)).toLocaleString()}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -1191,17 +1231,36 @@ export default function Monitoring() {
                                 size="sm"
                                 className="text-xs"
                                 onClick={() => {
-                                  // Show invoice details in a toast or alert
+                                  const latestPayment = invoice.paymentHistory && invoice.paymentHistory.length > 0
+                                    ? invoice.paymentHistory[invoice.paymentHistory.length - 1]
+                                    : null;
+                                  const feeDeducted = invoice.feeAmount || 0;
+                                  const lateFees = invoice.lateFees || 0;
+                                  const totalFees = feeDeducted + lateFees;
+                                  const reservePaid = ['closed', 'settled', 'completed'].includes(invoice.status)
+                                    ? (invoice.reserves || 0)
+                                    : 0;
+                                  const invoiceAgeDays = getInvoiceAgeDays(invoice);
+
                                   const details = [
-                                    `ID: ${invoice.id}`,
-                                    `Supplier: ${invoice.supplierName}`,
-                                    `Amount: $${invoice.invoiceAmount?.toLocaleString() || 'N/A'}`,
-                                    `Remaining: $${invoice.remainingAmount?.toLocaleString() || 'N/A'}`,
-                                    `Reserves: $${(invoice.reserves || 0).toLocaleString()} (20%)`,
-                                    `Due Date: ${formatDate(invoice.dueDate)}`,
-                                    `Status: ${invoice.status.toUpperCase()}`,
-                                    invoice.agingDays > 0 ? `Overdue: ${invoice.agingDays} days` : null,
-                                    invoice.lateFees ? `Late Fees: $${invoice.lateFees.toLocaleString()}` : null
+                                    `Transaction ID: ${invoice.id || 'N/A'}`,
+                                    `Invoice Number: ${invoice.invoiceNumber || 'N/A'}`,
+                                    `Buyer Name: ${invoice.buyerName || 'N/A'}`,
+                                    `Supplier Name: ${invoice.supplierName || 'N/A'}`,
+                                    `Invoice Amount: $${invoice.invoiceAmount?.toLocaleString() || 'N/A'}`,
+                                    `Invoice Date: ${formatDate(invoice.invoiceDate || invoice.createdAt)}`,
+                                    `Invoice Due Date: ${formatDate(invoice.dueDate)}`,
+                                    `Advance Percentage: ${getAdvancePercentage(invoice).toFixed(2)}%`,
+                                    `Advance Amount: $${(invoice.advanceAmount || 0).toLocaleString()}`,
+                                    `Reserves Held: $${(invoice.reserves || 0).toLocaleString()}`,
+                                    `Fee deducted: $${feeDeducted.toLocaleString()}`,
+                                    `Invoice Age: ${invoiceAgeDays} day(s)`,
+                                    `Amount Received: $${(invoice.paidAmount || 0).toLocaleString()}`,
+                                    `Date Received: ${latestPayment ? formatDate(latestPayment.paidAt) : 'N/A'}`,
+                                    `Late Days: ${invoice.agingDays || 0}`,
+                                    `Late Fees: $${lateFees.toLocaleString()}`,
+                                    `Reserves Paid: $${reservePaid.toLocaleString()}`,
+                                    `Total Fees: $${totalFees.toLocaleString()}`
                                   ].filter(Boolean).join('\n');
                                   
                                   alert(details);
@@ -1267,19 +1326,31 @@ export default function Monitoring() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice</TableHead>
-                      <TableHead>Supplier</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Paid</TableHead>
-                      <TableHead>Closed Date</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Transaction ID</TableHead>
+                      <TableHead>Invoice Number</TableHead>
+                      <TableHead>Buyer Name</TableHead>
+                      <TableHead>Supplier Name</TableHead>
+                      <TableHead>Invoice Amount</TableHead>
+                      <TableHead>Invoice Date</TableHead>
+                      <TableHead>Invoice Due Date</TableHead>
+                      <TableHead>Advance Percentage</TableHead>
+                      <TableHead>Advance Amount</TableHead>
+                      <TableHead>Reserves Held</TableHead>
+                      <TableHead>Fee deducted</TableHead>
+                      <TableHead>Invoice Age</TableHead>
+                      <TableHead>Amount Received</TableHead>
+                      <TableHead>Date Received</TableHead>
+                      <TableHead>Late Days</TableHead>
+                      <TableHead>Late Fees</TableHead>
+                      <TableHead>Reserves Paid</TableHead>
+                      <TableHead>Total Fees</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {closedInvoices.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
+                        <TableCell colSpan={19} className="text-center py-8">
                           <div className="text-muted-foreground">
                             <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
                             No closed invoices found
@@ -1290,33 +1361,78 @@ export default function Monitoring() {
                       closedInvoices.filter(invoice => invoice && invoice.id).map((invoice) => (
                         <TableRow key={invoice.id}>
                           <TableCell>
-                            <div>
-                              <div className="font-medium">{invoice.id}</div>
-                              <div className="text-sm text-muted-foreground">
-                                Ref: {invoice.reference || 'N/A'}
-                              </div>
+                            <div className="font-mono text-sm">{invoice.id || 'N/A'}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{invoice.invoiceNumber || 'N/A'}</div>
+                            <div className="text-xs text-muted-foreground">Buyer: {invoice.buyerName || 'N/A'}</div>
+                            <div className="text-xs text-muted-foreground">Supplier: {invoice.supplierName || 'N/A'}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">{invoice.buyerName || 'N/A'}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">{invoice.supplierName || 'N/A'}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">${(invoice.invoiceAmount || 0).toLocaleString()}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">{formatDate(invoice.invoiceDate || invoice.createdAt)}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className={`text-sm font-medium ${invoice.agingDaysAtClosure > 0 ? 'text-red-600' : ''}`}>
+                              {formatDate(invoice.dueDate)}
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">{invoice.supplierName}</div>
+                            <div className="text-sm">{getAdvancePercentage(invoice).toFixed(2)}%</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">
-                              ${invoice.invoiceAmount?.toLocaleString() || 'N/A'}
-                            </div>
+                            <div className="text-green-600 font-medium">${(invoice.advanceAmount || 0).toLocaleString()}</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium text-green-600">
-                              ${invoice.paidAmount?.toLocaleString() || 'N/A'}
+                            <div className="text-purple-600 font-medium">${(invoice.reserves || 0).toLocaleString()}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">${(invoice.feeAmount || 0).toLocaleString()}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">{getInvoiceAgeDays(invoice)} day(s)</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-blue-600 font-medium">${(invoice.paidAmount || 0).toLocaleString()}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {invoice.paymentHistory && invoice.paymentHistory.length > 0
+                                ? formatDate(invoice.paymentHistory[invoice.paymentHistory.length - 1].paidAt)
+                                : formatDate(invoice.closedAt || invoice.settledAt || invoice.updatedAt)}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
-                              {invoice.closedAt ? formatDate(invoice.closedAt) : 'N/A'}
+                              {(invoice.agingDaysAtClosure || 0) > 0 ? (
+                                <div className="text-red-600 font-medium">{invoice.agingDaysAtClosure} days</div>
+                              ) : (
+                                <span className="text-gray-400">0 days</span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>
-                            {getInvoiceStatusBadge(invoice.status)}
+                            <div className="text-sm">
+                              {(invoice.lateFees || 0) > 0 ? (
+                                <div className="font-medium text-red-600">${(invoice.lateFees || 0).toLocaleString()}</div>
+                              ) : (
+                                <span className="text-gray-400">$0</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">${(invoice.reserves || 0).toLocaleString()}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">${((invoice.feeAmount || 0) + (invoice.lateFees || 0)).toLocaleString()}</div>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-2">
@@ -1325,15 +1441,34 @@ export default function Monitoring() {
                                 size="sm"
                                 className="text-xs"
                                 onClick={() => {
+                                  const latestPayment = invoice.paymentHistory && invoice.paymentHistory.length > 0
+                                    ? invoice.paymentHistory[invoice.paymentHistory.length - 1]
+                                    : null;
+                                  const feeDeducted = invoice.feeAmount || 0;
+                                  const lateFees = invoice.lateFees || 0;
+                                  const totalFees = feeDeducted + lateFees;
+                                  const reservePaid = (invoice.reserves || 0);
+                                  const invoiceAgeDays = getInvoiceAgeDays(invoice);
+
                                   const details = [
-                                    `ID: ${invoice.id}`,
-                                    `Supplier: ${invoice.supplierName}`,
-                                    `Amount: $${invoice.invoiceAmount?.toLocaleString() || 'N/A'}`,
-                                    `Paid: $${invoice.paidAmount?.toLocaleString() || 'N/A'}`,
-                                    `Closed Date: ${invoice.closedAt ? formatDate(invoice.closedAt) : 'N/A'}`,
-                                    `Status: ${invoice.status.toUpperCase()}`,
-                                    invoice.lateFees ? `Late Fees: $${(invoice.lateFees || 0).toLocaleString()}` : null,
-                                    invoice.closureNotes ? `Notes: ${invoice.closureNotes}` : null
+                                    `Transaction ID: ${invoice.id || 'N/A'}`,
+                                    `Invoice Number: ${invoice.invoiceNumber || 'N/A'}`,
+                                    `Buyer Name: ${invoice.buyerName || 'N/A'}`,
+                                    `Supplier Name: ${invoice.supplierName || 'N/A'}`,
+                                    `Invoice Amount: $${invoice.invoiceAmount?.toLocaleString() || 'N/A'}`,
+                                    `Invoice Date: ${formatDate(invoice.invoiceDate || invoice.createdAt)}`,
+                                    `Invoice Due Date: ${formatDate(invoice.dueDate)}`,
+                                    `Advance Percentage: ${getAdvancePercentage(invoice).toFixed(2)}%`,
+                                    `Advance Amount: $${(invoice.advanceAmount || 0).toLocaleString()}`,
+                                    `Reserves Held: $${(invoice.reserves || 0).toLocaleString()}`,
+                                    `Fee deducted: $${feeDeducted.toLocaleString()}`,
+                                    `Invoice Age: ${invoiceAgeDays} day(s)`,
+                                    `Amount Received: $${(invoice.paidAmount || 0).toLocaleString()}`,
+                                    `Date Received: ${latestPayment ? formatDate(latestPayment.paidAt) : 'N/A'}`,
+                                    `Late Days: ${invoice.agingDaysAtClosure || invoice.agingDays || 0}`,
+                                    `Late Fees: $${lateFees.toLocaleString()}`,
+                                    `Reserves Paid: $${reservePaid.toLocaleString()}`,
+                                    `Total Fees: $${totalFees.toLocaleString()}`
                                   ].filter(Boolean).join('\\n');
                                   
                                   alert(details);

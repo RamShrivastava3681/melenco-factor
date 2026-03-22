@@ -182,6 +182,15 @@ router.get('/suppliers/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const entityData = req.body;
+    const currency = String(entityData.currency || entityData?.bankDetails?.currency || 'USD').toUpperCase();
+    const allowedCurrencies = ['USD', 'EUR', 'GBP'];
+
+    if (!allowedCurrencies.includes(currency)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid currency. Allowed values are USD, EUR, GBP.'
+      });
+    }
     
     // Calculate total credit limit from supplier limits (for buyers)
     let totalCreditLimit = 0;
@@ -195,6 +204,7 @@ router.post('/', async (req, res) => {
     const newEntity = new EntityModel({
       entityId: `${entityData.type?.toUpperCase() || 'ENT'}-${Date.now().toString().slice(-6)}`,
       name: entityData.name,
+      currency,
       type: entityData.type, // 'supplier' or 'buyer'
       status: 'active',
       riskCategory: 'medium', 
@@ -258,7 +268,7 @@ router.post('/', async (req, res) => {
         accountNumber: entityData.accountNumber,
         ifscCode: entityData.ifscCode,
         swiftCode: entityData.swiftCode,
-        currency: entityData.currency || 'USD'
+        currency
       },
       
       // Additional fields from forms

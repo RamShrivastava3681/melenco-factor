@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { broadcastNotification } from '../index';
-import { TransactionModel, ITransaction } from '../models/schemas';
+import { TransactionModel, ITransaction, EntityModel } from '../models/schemas';
 
 // Mock data as fallback
 import { mockTransactions } from '../../mockData';
@@ -146,6 +146,15 @@ router.post('/', async (req, res) => {
     };
     
     console.log('Required fields check:', requiredFields);
+
+    const allowedCurrencies = ['USD', 'EUR', 'GBP'];
+    const requestedCurrency = String(transactionData.currency || 'USD').toUpperCase();
+    if (!allowedCurrencies.includes(requestedCurrency)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid transaction currency. Allowed values are USD, EUR, GBP.'
+      });
+    }
     
     // Check for missing required fields
     const missingFields = Object.entries(requiredFields).filter(([key, value]) => 
@@ -160,6 +169,37 @@ router.post('/', async (req, res) => {
         missingFields: missingFields.map(([key]) => key)
       });
     }
+
+    const supplierEntity = await EntityModel.findOne({
+      $or: [
+        { entityId: transactionData.supplierId },
+        { _id: mongoose.Types.ObjectId.isValid(transactionData.supplierId) ? transactionData.supplierId : null }
+      ]
+    });
+
+    const buyerEntity = await EntityModel.findOne({
+      $or: [
+        { entityId: transactionData.buyerId },
+        { _id: mongoose.Types.ObjectId.isValid(transactionData.buyerId) ? transactionData.buyerId : null }
+      ]
+    });
+
+    const supplierCurrency = String(supplierEntity?.currency || supplierEntity?.bankDetails?.currency || 'USD').toUpperCase();
+    const buyerCurrency = String(buyerEntity?.currency || buyerEntity?.bankDetails?.currency || 'USD').toUpperCase();
+
+    if (supplierCurrency !== buyerCurrency) {
+      return res.status(400).json({
+        success: false,
+        message: `Supplier (${supplierCurrency}) and buyer (${buyerCurrency}) currencies must match.`
+      });
+    }
+
+    if (requestedCurrency !== supplierCurrency) {
+      return res.status(400).json({
+        success: false,
+        message: `Transaction currency (${requestedCurrency}) must match supplier/buyer currency (${supplierCurrency}).`
+      });
+    }
     
     // Create new transaction document
     const newTransaction = new TransactionModel({
@@ -169,7 +209,7 @@ router.post('/', async (req, res) => {
       ...requiredFields,
       dueDate: calculatedDueDate,
       status: transactionData.status || 'pending',
-      currency: transactionData.currency || 'USD',
+      currency: requestedCurrency,
       transactionType: transactionData.transactionType || 'factoring'
     });
     

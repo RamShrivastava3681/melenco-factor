@@ -115,7 +115,30 @@ export function AddBuyerDialog({ open, onOpenChange }: AddBuyerDialogProps) {
     }
   };
 
+  const getEntityCurrency = (entity: any) => {
+    return String(entity?.currency || entity?.bankDetails?.currency || 'USD').toUpperCase();
+  };
+
   const handleInputChange = (field: keyof BuyerFormData, value: string | number) => {
+    if (field === 'currency') {
+      const normalizedCurrency = String(value || 'USD').toUpperCase();
+      if (formData.supplierLimits.length > 0) {
+        const hasMismatch = formData.supplierLimits.some((limit) => {
+          const supplier = suppliers.find((item) => (item.id || item._id) === limit.supplierId);
+          if (!supplier) return false;
+          return getEntityCurrency(supplier) !== normalizedCurrency;
+        });
+
+        if (hasMismatch) {
+          toast.error('Buyer currency must match linked supplier currencies');
+          return;
+        }
+      }
+
+      setFormData((prev) => ({ ...prev, [field]: normalizedCurrency }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -129,6 +152,13 @@ export function AddBuyerDialog({ open, onOpenChange }: AddBuyerDialogProps) {
     if (!supplier) {
       console.error('Supplier not found for ID:', selectedSupplierId);
       toast.error('Selected supplier not found. Please try again.');
+      return;
+    }
+
+    const supplierCurrency = getEntityCurrency(supplier);
+    const buyerCurrency = String(formData.currency || 'USD').toUpperCase();
+    if (supplierCurrency !== buyerCurrency) {
+      toast.error(`Supplier currency (${supplierCurrency}) must match buyer currency (${buyerCurrency})`);
       return;
     }
 
@@ -729,12 +759,19 @@ export function AddBuyerDialog({ open, onOpenChange }: AddBuyerDialogProps) {
                   
                   <div>
                     <Label htmlFor="currency">Currency</Label>
-                    <Input
-                      id="currency"
+                    <Select
                       value={formData.currency}
-                      onChange={(e) => handleInputChange('currency', e.target.value)}
-                      placeholder="USD"
-                    />
+                      onValueChange={(value) => handleInputChange('currency', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   
 

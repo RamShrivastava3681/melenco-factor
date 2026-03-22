@@ -5,9 +5,9 @@ import { Breadcrumb } from './Breadcrumb';
 
 export function AppLayout() {
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="h-screen w-full bg-background overflow-hidden">
       <AppSidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="ml-72 h-full flex flex-col overflow-hidden">
         <TopBar />
         <div className="border-b border-border bg-muted/30">
           <Breadcrumb />

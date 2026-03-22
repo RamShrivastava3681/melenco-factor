@@ -174,9 +174,9 @@ const calculateLateFees = async (transaction: any) => {
     }
 
     const lateFeeRate = parseFloat(buyer.lateFees) / 100; // Convert percentage to decimal
-    // CORRECT: Late fees calculated on unpaid portion of net amount owed
-    const netPaidToSupplier = transaction.advanceAmount - (transaction.feeAmount || 0);
-    const buyerOwes = netPaidToSupplier; // Buyer owes the net amount we paid
+    // Late fees calculated on unpaid portion of full invoice amount owed by buyer
+    const invoiceAmount = transaction.invoiceValue || transaction.invoiceAmount || 0;
+    const buyerOwes = invoiceAmount;
     const paidSoFar = transaction.paidAmount || 0;
     const principalAmount = Math.max(0, buyerOwes - paidSoFar); // Outstanding amount for late fees
     
@@ -216,9 +216,9 @@ router.get('/open-invoices', async (req, res) => {
         const agingDays = transaction.dueDate ? 
           Math.max(0, Math.floor((Date.now() - new Date(transaction.dueDate).getTime()) / (1000 * 60 * 60 * 24))) : 0;
         
-        // CORRECT FACTORING MODEL: Buyer owes the net amount we paid to supplier
+        // Buyer obligation model: buyer owes full invoice amount
         const netPaidToSupplier = transaction.advanceAmount - (transaction.feeAmount || 0);
-        const buyerOwes = netPaidToSupplier; // Buyer pays back what we actually paid out
+        const buyerOwes = transaction.invoiceValue || transaction.invoiceAmount || 0;
         const totalPaidByBuyer = (transaction.paidAmount || 0); // What buyer has paid so far
         const remainingAmount = Math.max(0, buyerOwes - totalPaidByBuyer); // What buyer still owes
         const totalAmountDue = remainingAmount + lateFees; // Including late fees
@@ -229,14 +229,13 @@ router.get('/open-invoices', async (req, res) => {
         const isFullyPaid = remainingAmount <= 0;
         const canReleaseReserve = isFullyPaid && transaction.reserveAmount > 0;
         
-        // Get buyer details to ensure correct buyer name
-        const buyer = await EntityModel.findOne({ entityId: transaction.buyerId });
-        
         return {
           id: transaction.transactionId,
           invoiceNumber: transaction.invoiceNumber,
+          invoiceDate: transaction.invoiceDate,
           supplierName: transaction.supplierName,
-          buyerName: buyer?.name || transaction.buyerName,
+          buyerName: transaction.buyerName,
+          currency: transaction.currency || 'USD',
           invoiceAmount: transaction.invoiceValue, // Original invoice amount
           advanceAmount: transaction.advanceAmount, // Gross advance (before fees)
           feeAmount: transaction.feeAmount || 0, // Fee deducted
@@ -250,6 +249,8 @@ router.get('/open-invoices', async (req, res) => {
           agingDays: agingDays,
           lateFees: lateFees,
           fundedAt: transaction.fundedAt,
+          createdAt: transaction.createdAt,
+          updatedAt: transaction.updatedAt,
           totalAmountDue: totalAmountDue,
           paymentHistory: transaction.paymentHistory || [],
           isOverdue: agingDays > 0,
@@ -384,9 +385,9 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
       });
     }
 
-    // CORRECT FACTORING MODEL: Buyer owes the net amount we paid to supplier
+    // Buyer obligation model: buyer owes full invoice amount
     const netPaidToSupplier = transaction.advanceAmount - (transaction.feeAmount || 0);
-    const buyerOwes = netPaidToSupplier; // Buyer pays back what we actually paid out
+    const buyerOwes = transaction.invoiceValue || transaction.invoiceAmount || 0;
     const totalPaidSoFar = (transaction.paidAmount || 0);
     const remainingAmount = Math.max(0, buyerOwes - totalPaidSoFar);
     const currentLateFees = await calculateLateFees(transaction);
@@ -456,7 +457,7 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
     }
     
     const updatedNetPaidToSupplier = updatedTransaction.advanceAmount - (updatedTransaction.feeAmount || 0);
-    const buyerOwesAmount = updatedNetPaidToSupplier; // Buyer owes the net amount we paid
+    const buyerOwesAmount = updatedTransaction.invoiceValue || updatedTransaction.invoiceAmount || 0;
     const finalRemainingAmount = Math.max(0, buyerOwesAmount - (updatedTransaction.paidAmount || 0));
 
     res.json({
@@ -499,8 +500,10 @@ router.get('/closed-invoices', async (req, res) => {
         return {
           id: transaction.transactionId,
           invoiceNumber: transaction.invoiceNumber,
+          invoiceDate: transaction.invoiceDate,
           supplierName: transaction.supplierName,
           buyerName: transaction.buyerName,
+          currency: transaction.currency || 'USD',
           invoiceAmount: transaction.invoiceValue,
           advanceAmount: transaction.advanceAmount,
           paidAmount: transaction.paidAmount || 0,
@@ -508,6 +511,8 @@ router.get('/closed-invoices', async (req, res) => {
           lateFees: totalLateFees,
           status: transaction.status,
           settledAt: transaction.settledAt,
+          createdAt: transaction.createdAt,
+          updatedAt: transaction.updatedAt,
           paymentHistory: transaction.paymentHistory || [],
           agingDaysAtClosure: transaction.settledAt && transaction.dueDate ? 
             Math.max(0, Math.floor((new Date(transaction.settledAt).getTime() - new Date(transaction.dueDate).getTime()) / (1000 * 60 * 60 * 24))) : 0
@@ -550,9 +555,9 @@ router.get('/open-invoices/:invoiceId/closure-report', async (req, res) => {
     const agingDays = transaction.dueDate ? 
       Math.max(0, Math.floor((Date.now() - new Date(transaction.dueDate).getTime()) / (1000 * 60 * 60 * 24))) : 0;
     
-    // CORRECT FACTORING MODEL: Buyer owes the net amount we paid to supplier
+    // Buyer obligation model: buyer owes full invoice amount
     const netPaidToSupplier = transaction.advanceAmount - (transaction.feeAmount || 0);
-    const buyerOwes = netPaidToSupplier;
+    const buyerOwes = transaction.invoiceValue || transaction.invoiceAmount || 0;
     const paidAmount = transaction.paidAmount || 0;
     const remainingAmount = Math.max(0, buyerOwes - paidAmount);
     const totalLateFeesPaid = (transaction.paymentHistory || []).reduce((sum: number, payment: any) => sum + (payment.lateFeesPaid || 0), 0);
@@ -652,7 +657,7 @@ RESERVE MANAGEMENT:
 ═══════════════════════════════════════════════════════════════════════════════
 
 PAYMENT OBLIGATIONS (CORRECTED FACTORING MODEL):
-  Buyer Owes (Net Amount):     $${buyerOwes.toLocaleString()}
+  Buyer Owes (Invoice Amount): $${buyerOwes.toLocaleString()}
   Amount Received:             $${paidAmount.toLocaleString()}
   Outstanding Principal:       $${remainingAmount.toLocaleString()}
   
@@ -1007,7 +1012,7 @@ router.get('/incoming-payments', async (req, res) => {
         // Calculate payment breakdown
         const invoiceAmount = transaction.invoiceValue;
         const paidAmount = transaction.paidAmount || 0;
-        const remainingAmount = Math.max(0, invoiceAmount - transaction.advanceAmount - paidAmount);
+        const remainingAmount = Math.max(0, invoiceAmount - paidAmount);
         const lateFees = await calculateLateFees(transaction);
         const totalAmountDue = remainingAmount + lateFees;
         
@@ -1194,7 +1199,7 @@ router.all('/payouts/*', async (req, res) => {
 // Process payout to supplier (POST method)
 router.post('/payout', async (req, res) => {
   try {
-    const { supplierId, amount, transactionIds, bankDetails } = req.body;
+    const { supplierId, amount, transactionIds, bankDetails, paymentInstruction } = req.body;
     
     console.log('💰 Processing payout:', {
       supplierId,
@@ -1207,6 +1212,27 @@ router.post('/payout', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Supplier ID, amount, and transaction IDs are required'
+      });
+    }
+
+    const requiredInstructionFields = [
+      'serialNumber',
+      'transactionType',
+      'paymentAccountNumber',
+      'beneficiaryAccountNumber',
+      'effectiveDate',
+      'currency',
+      'amount'
+    ];
+
+    const missingInstructionFields = requiredInstructionFields.filter((field) =>
+      !paymentInstruction || paymentInstruction[field] === undefined || paymentInstruction[field] === null || paymentInstruction[field] === ''
+    );
+
+    if (missingInstructionFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing payment instruction fields: ${missingInstructionFields.join(', ')}`
       });
     }
     
@@ -1245,6 +1271,17 @@ router.post('/payout', async (req, res) => {
       amount,
       transactionIds,
       bankDetails,
+      paymentInstruction: {
+        serialNumber: String(paymentInstruction.serialNumber),
+        transactionType: String(paymentInstruction.transactionType),
+        paymentAccountNumber: String(paymentInstruction.paymentAccountNumber),
+        beneficiaryAccountNumber: String(paymentInstruction.beneficiaryAccountNumber),
+        effectiveDate: String(paymentInstruction.effectiveDate),
+        remarks: paymentInstruction.remarks ? String(paymentInstruction.remarks) : '',
+        currency: String(paymentInstruction.currency),
+        amount: parseFloat(paymentInstruction.amount) || amount,
+        paymentProofFileName: paymentInstruction.paymentProofFileName ? String(paymentInstruction.paymentProofFileName) : ''
+      },
       status: 'completed', // Mark as completed immediately for demo
       processedAt: new Date(),
       completedAt: new Date(),
@@ -1275,6 +1312,7 @@ router.post('/payout', async (req, res) => {
         amount,
         transactionIds,
         bankDetails,
+        paymentInstruction: payoutRecord.paymentInstruction,
         status: payoutRecord.status,
         processedAt: payoutRecord.processedAt,
         reference: payoutRecord.reference,
@@ -1382,6 +1420,17 @@ Amount Paid: ${payoutRecord.bankDetails?.currency || 'USD'} ${payoutRecord.amoun
 Payment Method: ${payoutRecord.method ? payoutRecord.method.replace('_', ' ').toUpperCase() : 'BANK TRANSFER'}
 Processed Date: ${payoutRecord.processedAt ? payoutRecord.processedAt.toLocaleDateString() : 'N/A'}
 Completed Date: ${payoutRecord.completedAt ? payoutRecord.completedAt.toLocaleDateString() : 'Pending'}
+
+--- TREASURY PAYMENT FORM DETAILS ---
+Serial Number: ${payoutRecord.paymentInstruction?.serialNumber || 'N/A'}
+Transaction Type: ${payoutRecord.paymentInstruction?.transactionType || 'N/A'}
+Payment Account Number: ${payoutRecord.paymentInstruction?.paymentAccountNumber || 'N/A'}
+Beneficiary Account Number: ${payoutRecord.paymentInstruction?.beneficiaryAccountNumber || 'N/A'}
+Effective Date: ${payoutRecord.paymentInstruction?.effectiveDate || 'N/A'}
+Remarks: ${payoutRecord.paymentInstruction?.remarks || 'N/A'}
+Currency: ${payoutRecord.paymentInstruction?.currency || payoutRecord.bankDetails?.currency || 'N/A'}
+Form Amount: ${payoutRecord.paymentInstruction?.amount ? payoutRecord.paymentInstruction.amount.toLocaleString() : 'N/A'}
+Payment Proof: ${payoutRecord.paymentInstruction?.paymentProofFileName || 'Not attached'}
 
 --- TRANSACTION DETAILS ---
 Transaction IDs: ${payoutRecord.transactionIds && payoutRecord.transactionIds.length > 0 ? payoutRecord.transactionIds.join(', ') : 'N/A'}
@@ -1551,8 +1600,7 @@ router.post('/open-invoices/:invoiceId/release-reserves', async (req, res) => {
     }
     
     // Check if reserves can be released
-    const netPaidToSupplier = transaction.advanceAmount - (transaction.feeAmount || 0);
-    const buyerOwes = netPaidToSupplier;
+    const buyerOwes = transaction.invoiceValue || transaction.invoiceAmount || 0;
     const paidAmount = transaction.paidAmount || 0;
     const remainingAmount = Math.max(0, buyerOwes - paidAmount);
     
