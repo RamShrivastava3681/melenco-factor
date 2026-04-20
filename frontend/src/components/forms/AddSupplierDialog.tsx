@@ -13,18 +13,25 @@ export function AddSupplierDialog({ open, onOpenChange }: AddSupplierDialogProps
   const handleSubmit = async (data: SupplierFormData) => {
     try {
       console.log('Supplier data:', data);
+
+      const formData = new FormData();
+      const { agreementFrameworkDocument, ...rest } = data;
+      formData.append('payload', JSON.stringify({
+        ...rest,
+        type: 'supplier'
+      }));
+
+      if (agreementFrameworkDocument) {
+        formData.append('agreementFrameworkDocument', agreementFrameworkDocument);
+      }
       
       // Send the data to the backend API
       const response = await fetch(createApiUrl('/entities'), {
         method: 'POST',
         headers: {
-          ...getApiHeaders(),
-          'Content-Type': 'application/json'
+          ...getApiHeaders({ json: false })
         },
-        body: JSON.stringify({
-          ...data,
-          type: 'supplier'
-        })
+        body: formData
       });
       
       if (!response.ok) {

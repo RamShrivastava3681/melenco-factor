@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { TransactionModel, EntityModel, PayoutRecordModel } from '../models/schemas';
 import { broadcastNotification } from '../index';
+import { mockTransactions } from '../../mockData';
 
 const router = express.Router();
 
@@ -154,11 +155,14 @@ router.get('/invoices', async (req, res) => {
 // Get open invoices for monitoring
 // Helper function to calculate late fees
 const calculateLateFees = async (transaction: any) => {
-  if (!transaction.dueDate || !transaction.fundedAt) {
+  if (!transaction.dueDate) {
     return 0;
   }
 
   const dueDate = new Date(transaction.dueDate);
+  if (Number.isNaN(dueDate.getTime())) {
+    return 0;
+  }
   const currentDate = new Date();
   const overdueDays = Math.max(0, Math.floor((currentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
 
@@ -167,22 +171,35 @@ const calculateLateFees = async (transaction: any) => {
   }
 
   try {
-    // Get buyer entity to check late fee configuration
-    const buyer = await EntityModel.findOne({ entityId: transaction.buyerId });
-    if (!buyer || !buyer.lateFees) {
+    // Get buyer entity to check late fee configuration. Support both business entityId and MongoDB ObjectId.
+    const buyerId = String(transaction.buyerId || '');
+    const buyer = await EntityModel.findOne({
+      $or: [
+        { entityId: buyerId },
+        { _id: mongoose.Types.ObjectId.isValid(buyerId) ? buyerId : null }
+      ]
+    });
+
+    const lateFeeRatePercent = parseFloat(String(buyer?.lateFees || '0').replace('%', '').trim());
+    if (!buyer || Number.isNaN(lateFeeRatePercent) || lateFeeRatePercent <= 0) {
       return 0;
     }
 
-    const lateFeeRate = parseFloat(buyer.lateFees) / 100; // Convert percentage to decimal
+    const lateFeeRate = lateFeeRatePercent / 100; // Convert percentage to decimal
     // Late fees calculated on unpaid portion of full invoice amount owed by buyer
     const invoiceAmount = transaction.invoiceValue || transaction.invoiceAmount || 0;
     const buyerOwes = invoiceAmount;
     const paidSoFar = transaction.paidAmount || 0;
     const principalAmount = Math.max(0, buyerOwes - paidSoFar); // Outstanding amount for late fees
+
+    if (principalAmount <= 0) {
+      return 0;
+    }
     
     let totalLateFees = 0;
-    
-    if (buyer.lateFeesFrequency === 'daily') {
+
+    const lateFeeFrequency = String(buyer.lateFeesFrequency || 'monthly').toLowerCase();
+    if (lateFeeFrequency === 'daily') {
       totalLateFees = principalAmount * lateFeeRate * (overdueDays / 365); // Daily compounding
     } else {
       // Monthly frequency (default)
@@ -489,6 +506,45 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
 // Get closed invoices
 router.get('/closed-invoices', async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const closedInvoices = mockTransactions
+        .filter((transaction: any) => ['settled', 'completed', 'closed'].includes(transaction.status))
+        .map((transaction: any) => ({
+          id: transaction.transactionId || transaction.id,
+          invoiceNumber: transaction.invoiceNumber,
+          invoiceDate: transaction.invoiceDate,
+          dueDate: transaction.dueDate,
+          supplierName: transaction.supplierName,
+          buyerName: transaction.buyerName,
+          currency: transaction.currency || 'USD',
+          invoiceAmount: transaction.invoiceValue || transaction.invoiceAmount || 0,
+          advanceAmount: transaction.advanceAmount || 0,
+          feeAmount: transaction.feeAmount || 0,
+          paidAmount: transaction.paidAmount || 0,
+          reserves: transaction.reserveAmount || 0,
+          lateFees: 0,
+          status: transaction.status,
+          settledAt: transaction.settledAt,
+          createdAt: transaction.createdAt,
+          updatedAt: transaction.updatedAt,
+          paymentHistory: transaction.paymentHistory || [],
+          agingDaysAtClosure: transaction.settledAt && transaction.dueDate
+            ? Math.max(0, Math.floor((new Date(transaction.settledAt).getTime() - new Date(transaction.dueDate).getTime()) / (1000 * 60 * 60 * 24)))
+            : 0
+        }));
+
+      return res.json({
+        success: true,
+        data: closedInvoices,
+        summary: {
+          total: closedInvoices.length,
+          totalAmount: closedInvoices.reduce((sum: number, invoice: any) => sum + (invoice.invoiceAmount || 0), 0),
+          totalPaidAmount: closedInvoices.reduce((sum: number, invoice: any) => sum + (invoice.paidAmount || 0), 0),
+          totalLateFees: closedInvoices.reduce((sum: number, invoice: any) => sum + (invoice.lateFees || 0), 0)
+        }
+      });
+    }
+
     const closedTransactions = await TransactionModel.find({
       status: { $in: ['settled', 'completed', 'closed'] }
     }).sort({ settledAt: -1, updatedAt: -1 }).limit(50);
@@ -522,7 +578,13 @@ router.get('/closed-invoices', async (req, res) => {
 
     res.json({
       success: true,
-      data: closedInvoices
+      data: closedInvoices,
+      summary: {
+        total: closedInvoices.length,
+        totalAmount: closedInvoices.reduce((sum, invoice) => sum + (invoice.invoiceAmount || 0), 0),
+        totalPaidAmount: closedInvoices.reduce((sum, invoice) => sum + (invoice.paidAmount || 0), 0),
+        totalLateFees: closedInvoices.reduce((sum, invoice) => sum + (invoice.lateFees || 0), 0)
+      }
     });
 
   } catch (error) {

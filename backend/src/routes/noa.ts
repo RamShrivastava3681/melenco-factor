@@ -5,10 +5,49 @@ import crypto from 'crypto';
 import puppeteer from 'puppeteer';
 import path from 'path';
 import fs from 'fs';
-import { TransactionModel, NOAModel } from '../models/schemas';
+import { TransactionModel, NOAModel, EntityModel } from '../models/schemas';
 import { broadcastNotification } from '../index';
+import { getDocumentFromS3, uploadDocumentToS3 } from '../utils/s3';
 
 const router = express.Router();
+const NOA_AUDIT_RECIPIENT = 'ramshri860499@gmail.com';
+const NOA_SUPPORT_EMAIL = 'admin@whizunik.com';
+const NOA_SUPPORT_PHONE = '+91-9958880183';
+
+const buildEntityAddress = (entity: any): string[] => {
+  if (!entity) return [];
+
+  const parts = [entity.address, entity.city, entity.state, entity.country, entity.pincode]
+    .map((part) => (typeof part === 'string' ? part.trim() : ''))
+    .filter(Boolean);
+
+  return parts;
+};
+
+const getNOAPartyDetails = async (transaction: any) => {
+  const [buyerEntity, supplierEntity] = await Promise.all([
+    EntityModel.findOne({ entityId: transaction.buyerId }).lean(),
+    EntityModel.findOne({ entityId: transaction.supplierId }).lean()
+  ]);
+
+  return {
+    buyer: {
+      name: transaction.buyerName,
+      addressLines: buildEntityAddress(buyerEntity),
+      email: buyerEntity?.contactEmail || buyerEntity?.email || transaction.buyerEmail || ''
+    },
+    supplier: {
+      name: transaction.supplierName,
+      addressLines: buildEntityAddress(supplierEntity),
+      email: supplierEntity?.contactEmail || supplierEntity?.email || '',
+      phone: supplierEntity?.phone || ''
+    },
+    support: {
+      email: NOA_SUPPORT_EMAIL,
+      phone: NOA_SUPPORT_PHONE
+    }
+  };
+};
 
 // Email configuration (configure with your SMTP settings)
 const createEmailTransporter = () => {
@@ -27,6 +66,47 @@ const createEmailTransporter = () => {
 // Generate secure token for NOA
 const generateNOAToken = (): string => {
   return crypto.randomBytes(32).toString('hex');
+};
+
+const dataUrlToAttachment = (dataUrl: string, filename: string) => {
+  const match = dataUrl.match(/^data:(.+);base64,(.+)$/);
+  if (!match) {
+    return null;
+  }
+
+  const mimeType = match[1];
+  const base64Content = match[2];
+
+  if (!mimeType || !base64Content) {
+    return null;
+  }
+
+  return {
+    filename,
+    content: Buffer.from(base64Content, 'base64'),
+    contentType: mimeType
+  };
+};
+
+const generateSignedNOAPdfBuffer = async (noaData: any, transaction: any, partyDetails: any): Promise<Buffer> => {
+  const pdfHtml = generateSignedNOAPDFHtml(noaData, transaction, partyDetails);
+  const browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.setContent(pdfHtml, { waitUntil: 'networkidle0' });
+
+  const pdfResult = await page.pdf({
+    format: 'A4',
+    printBackground: true,
+    margin: {
+      top: '20mm',
+      right: '15mm',
+      bottom: '20mm',
+      left: '15mm'
+    }
+  });
+
+  await browser.close();
+  return Buffer.from(pdfResult);
 };
 
 // Create and send NOA email
@@ -87,7 +167,8 @@ router.post('/send', async (req, res) => {
 
     // Create email content
     const referenceNumber = `REF-${transaction.transactionId}-${Date.now().toString().slice(-6)}`;
-    const noaUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/noa/${token}`;
+    const localhostFrontendUrl = process.env.LOCALHOST_FRONTEND_URL || 'http://localhost:5173';
+    const noaUrl = `${localhostFrontendUrl}/noa/${token}`;
     
     const emailSubject = `Invoice Verification Required – ${referenceNumber}`;
     const emailBody = `
@@ -131,7 +212,7 @@ router.post('/send', async (req, res) => {
         
         <p><strong>Important:</strong> This verification link is valid for 72 hours and expires on ${expiresAt.toLocaleDateString()} at ${expiresAt.toLocaleTimeString()}.</p>
         
-        <p>If you have any queries regarding this matter, please contact us at finance@whizunik.com.</p>
+        <p>If you have any queries regarding this matter, please contact us at ${NOA_SUPPORT_EMAIL} or ${NOA_SUPPORT_PHONE}.</p>
         
         <p>Yours faithfully,<br>
         <strong>Whizunik Finance Team</strong><br>
@@ -142,7 +223,7 @@ router.post('/send', async (req, res) => {
         <p><strong>Legal Disclaimer:</strong> This communication is confidential and may contain legally privileged information. If you are not the intended recipient, please notify us immediately and delete this message. This notice constitutes formal notification under our receivables financing agreement.</p>
         
         <p><strong>Whizunik Financial Services</strong><br>
-        Email: finance@whizunik.com | Phone: +44 (0)20 7000 0000<br>
+        Email: ${NOA_SUPPORT_EMAIL} | Phone: ${NOA_SUPPORT_PHONE}<br>
         Registered in England and Wales. Company No. 12345678</p>
     </div>
 </body>
@@ -186,6 +267,34 @@ router.post('/send', async (req, res) => {
 
   } catch (error) {
     console.error('Send NOA error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Get all signed NOAs for monitoring dashboard
+router.get('/signed', async (req, res) => {
+  try {
+    const { limit = '200' } = req.query;
+    const limitNum = Math.max(1, Math.min(parseInt(limit as string, 10) || 200, 1000));
+
+    const signedNoas = await NOAModel.find({ status: 'acknowledged' })
+      .sort({ acknowledgedAt: -1, updatedAt: -1 })
+      .limit(limitNum)
+      .lean();
+
+    res.json({
+      success: true,
+      message: 'Signed NOAs retrieved successfully',
+      data: signedNoas,
+      summary: {
+        total: signedNoas.length
+      }
+    });
+  } catch (error) {
+    console.error('Get signed NOAs error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -239,11 +348,14 @@ router.get('/:token', async (req, res) => {
     // Get transaction details
     const transaction = await TransactionModel.findOne({ transactionId: noaData.transactionId });
 
+    const partyDetails = transaction ? await getNOAPartyDetails(transaction) : null;
+
     res.json({
       success: true,
       data: {
         noaData,
         transaction,
+        partyDetails,
         canSign: noaData.status !== 'acknowledged'
       }
     });
@@ -261,9 +373,23 @@ router.get('/:token', async (req, res) => {
 router.post('/:token/sign', async (req, res) => {
   try {
     const { token } = req.params;
-    const { fullName, position, signatureDataUrl } = req.body;
+    const { fullName, position, signatureDataUrl, photoDataUrl, location } = req.body;
     const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
     const userAgent = req.get('User-Agent') || 'unknown';
+
+    if (!fullName || !position || !signatureDataUrl || !photoDataUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Full name, position, signature, and selfie photo are required'
+      });
+    }
+
+    if (!location || typeof location.city !== 'string' || typeof location.country !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid city and country location are required before signing'
+      });
+    }
 
     const noaData = await NOAModel.findOne({ noaId: token });
 
@@ -284,6 +410,23 @@ router.post('/:token/sign', async (req, res) => {
 
     // Update NOA status to acknowledged
     noaData.status = 'acknowledged';
+    noaData.signatoryData = {
+      fullName,
+      position,
+      ipAddress,
+      userAgent,
+      signatureDataUrl,
+      photoDataUrl,
+      location: {
+        city: location.city,
+        country: location.country,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: typeof location.accuracy === 'number' ? location.accuracy : undefined,
+        capturedAt: new Date()
+      }
+    };
+    noaData.acknowledgedAt = new Date();
     await noaData.save();
 
     // Update transaction NOA status to signed and create supplier payment obligation
@@ -304,6 +447,25 @@ router.post('/:token/sign', async (req, res) => {
       transaction.paymentDue = true; // Mark that supplier payment is now due
       transaction.approvedAt = new Date();
       await transaction.save();
+
+      // Generate signed NOA PDF and persist to S3 for long-term retrieval
+      try {
+        const partyDetails = await getNOAPartyDetails(transaction);
+        const signedPdfBuffer = await generateSignedNOAPdfBuffer(noaData, transaction, partyDetails);
+        const signedFileName = `NOA-${transaction.transactionId}-signed.pdf`;
+        const uploadedNoaDoc = await uploadDocumentToS3({
+          folder: `noa/${transaction.transactionId}`,
+          fileName: signedFileName,
+          contentType: 'application/pdf',
+          body: signedPdfBuffer
+        });
+
+        noaData.signedDocumentKey = uploadedNoaDoc.key;
+        noaData.signedDocumentFileName = signedFileName;
+        await noaData.save();
+      } catch (s3Error) {
+        console.error('Failed to generate/upload signed NOA PDF to S3:', s3Error);
+      }
       
       console.log('✅ After update:', {
         transactionId: transaction.transactionId,
@@ -325,6 +487,42 @@ router.post('/:token/sign', async (req, res) => {
         timestamp: new Date(),
         priority: 'high'
       });
+
+      // Forward signed NOA evidence to audit recipient
+      const transporter = createEmailTransporter();
+      const signatureAttachment = dataUrlToAttachment(signatureDataUrl, `noa-signature-${transaction.transactionId}.png`);
+      const photoAttachment = dataUrlToAttachment(photoDataUrl, `noa-selfie-${transaction.transactionId}.png`);
+
+      const locationText = `${location.city}, ${location.country}`;
+
+      try {
+        await transporter.sendMail({
+          from: `"Whizunik Finance" <${process.env.SMTP_USER || 'finance@whizunik.com'}>`,
+          to: NOA_AUDIT_RECIPIENT,
+          subject: `Signed NOA Received - ${transaction.transactionId}`,
+          html: `
+            <h2>Signed NOA Details</h2>
+            <p><strong>Transaction ID:</strong> ${transaction.transactionId}</p>
+            <p><strong>Buyer:</strong> ${transaction.buyerName} (${noaData.buyerEmail})</p>
+            <p><strong>Supplier:</strong> ${transaction.supplierName}</p>
+            <p><strong>Invoice Number:</strong> ${transaction.invoiceNumber}</p>
+            <p><strong>Invoice Amount:</strong> ${transaction.currency} ${transaction.invoiceValue?.toLocaleString?.() || transaction.invoiceValue}</p>
+            <p><strong>Signatory Name:</strong> ${fullName}</p>
+            <p><strong>Signatory Position:</strong> ${position}</p>
+            <p><strong>IP Address:</strong> ${ipAddress}</p>
+            <p><strong>User Agent:</strong> ${userAgent}</p>
+            <p><strong>Location:</strong> ${locationText}</p>
+            ${typeof location.latitude === 'number' && typeof location.longitude === 'number'
+              ? `<p><strong>Coordinates:</strong> ${location.latitude}, ${location.longitude}</p>`
+              : ''}
+            <p><strong>Signed At:</strong> ${new Date().toISOString()}</p>
+            <p>Signature image and buyer selfie are attached.</p>
+          `,
+          attachments: [signatureAttachment, photoAttachment].filter(Boolean) as any
+        });
+      } catch (emailError) {
+        console.error('Failed to forward signed NOA evidence email:', emailError);
+      }
     } else {
       console.error('❌ Transaction not found for NOA:', noaData.transactionId);
     }
@@ -335,7 +533,8 @@ router.post('/:token/sign', async (req, res) => {
       data: {
         noaId: noaData.noaId,
         status: noaData.status, 
-        acknowledgedAt: noaData.updatedAt,
+        acknowledgedAt: noaData.acknowledgedAt || noaData.updatedAt,
+        signedAt: noaData.acknowledgedAt || noaData.updatedAt,
         acknowledgedBy: fullName
       }
     });
@@ -377,26 +576,30 @@ router.get('/:token/pdf', async (req, res) => {
       });
     }
 
-    // Generate PDF HTML content
-    const pdfHtml = generateSignedNOAPDFHtml(noaData, transaction);
+    let pdfBuffer: Buffer;
 
-    // Generate PDF using Puppeteer
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.setContent(pdfHtml, { waitUntil: 'networkidle0' });
-    
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm'
+    if (noaData.signedDocumentKey) {
+      const fromS3 = await getDocumentFromS3(noaData.signedDocumentKey);
+      pdfBuffer = fromS3.buffer;
+    } else {
+      const partyDetails = await getNOAPartyDetails(transaction);
+      pdfBuffer = await generateSignedNOAPdfBuffer(noaData, transaction, partyDetails);
+
+      try {
+        const signedFileName = `NOA-${transaction.transactionId}-signed.pdf`;
+        const uploadedNoaDoc = await uploadDocumentToS3({
+          folder: `noa/${transaction.transactionId}`,
+          fileName: signedFileName,
+          contentType: 'application/pdf',
+          body: pdfBuffer
+        });
+        noaData.signedDocumentKey = uploadedNoaDoc.key;
+        noaData.signedDocumentFileName = signedFileName;
+        await noaData.save();
+      } catch (uploadError) {
+        console.error('Failed to upload on-demand generated NOA PDF to S3:', uploadError);
       }
-    });
-
-    await browser.close();
+    }
 
     // Set headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
@@ -450,10 +653,21 @@ router.get('/status/:transactionId', async (req, res) => {
 });
 
 // Helper function to generate signed NOA PDF HTML
-function generateSignedNOAPDFHtml(noaData: any, transaction: any): string {
-  const signedDate = noaData.signedAt?.toLocaleDateString() || '';
-  const signedTime = noaData.signedAt?.toLocaleTimeString() || '';
+function generateSignedNOAPDFHtml(noaData: any, transaction: any, partyDetails: any): string {
+  const signedAt = noaData.acknowledgedAt || noaData.updatedAt;
+  const signedDate = signedAt ? new Date(signedAt).toLocaleDateString() : '';
+  const signedTime = signedAt ? new Date(signedAt).toLocaleTimeString() : '';
   const referenceNumber = `REF-${transaction.transactionId}-${Date.now().toString().slice(-6)}`;
+  const buyerAddressHtml = (partyDetails?.buyer?.addressLines?.length
+    ? partyDetails.buyer.addressLines
+    : ['Address not available'])
+    .map((line: string) => `${line}<br>`)
+    .join('');
+  const supplierAddressHtml = (partyDetails?.supplier?.addressLines?.length
+    ? partyDetails.supplier.addressLines
+    : ['Address not available'])
+    .map((line: string) => `${line}<br>`)
+    .join('');
   
   return `
 <!DOCTYPE html>
@@ -469,7 +683,6 @@ function generateSignedNOAPDFHtml(noaData: any, transaction: any): string {
         .invoice-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         .invoice-table th, .invoice-table td { border: 1px solid #333; padding: 10px; text-align: left; }
         .invoice-table th { background-color: #f5f5f5; font-weight: bold; }
-        .bank-details { border: 2px solid #333; padding: 15px; margin: 20px 0; }
         .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
         .signature-left, .signature-right { width: 48%; }
         .signature-box { border: 1px solid #333; height: 100px; margin: 10px 0; position: relative; }
@@ -485,15 +698,12 @@ function generateSignedNOAPDFHtml(noaData: any, transaction: any): string {
     <div class="header-section">
         <div class="header-left">
             <strong>${transaction.buyerName}</strong><br>
-            [Buyer Address Line 1]<br>
-            [Buyer Address Line 2]<br>
-            [Buyer Address Line 3]
+        ${buyerAddressHtml}
         </div>
         <div class="header-right">
             <strong>Your Supplier:</strong><br>
             ${transaction.supplierName}<br>
-            [Supplier Address Line 1]<br>
-            [Supplier Address Line 2]
+        ${supplierAddressHtml}
         </div>
     </div>
     
@@ -530,21 +740,13 @@ function generateSignedNOAPDFHtml(noaData: any, transaction: any): string {
         <li>The goods and/or services represented by the invoice have been delivered and conform to your requirements;</li>
         <li>There is no consignment, retention of title, or similar arrangement affecting these goods;</li>
         <li>You will pay the invoice amount in full without any deduction, set-off, or counterclaim;</li>
-        <li>Payment will be made directly to the bank account detailed below;</li>
+        <li>Payment will be made directly to the designated account communicated by us;</li>
         <li>You confirm compliance with all applicable anti-bribery and corruption laws.</li>
     </ol>
     
-    <div class="bank-details">
-        <strong>Payment Details:</strong><br>
-        Account Name: Whizunik Financial Services Ltd<br>
-        Bank: Barclays Bank PLC<br>
-        Account Number: 12345678<br>
-        Sort Code: 20-00-00<br>
-        IBAN: GB29 BARC 2000 0012 3456 78<br>
-        SWIFT: BARCGB22
-    </div>
-    
     <p class="legal-text">This agreement shall be governed by English law and subject to the exclusive jurisdiction of the English courts. Any disputes arising may be referred to arbitration under the LCIA Rules, conducted in London in the English language.</p>
+
+    <p class="legal-text"><strong>Contact Information:</strong> Email: ${NOA_SUPPORT_EMAIL} | Phone: ${NOA_SUPPORT_PHONE}</p>
     
     <div class="signature-section">
         <div class="signature-left">
@@ -560,14 +762,21 @@ function generateSignedNOAPDFHtml(noaData: any, transaction: any): string {
             <p><strong>Name:</strong> ${noaData.signatoryData?.fullName || ''}<br>
             <strong>Position:</strong> ${noaData.signatoryData?.position || ''}<br>
             <strong>Date:</strong> ${signedDate}</p>
+        <p><strong>Location:</strong> ${noaData.signatoryData?.location?.city || ''}, ${noaData.signatoryData?.location?.country || ''}</p>
         </div>
     </div>
+
+    ${noaData.signatoryData?.photoDataUrl ? `
+    <div style="margin-top: 20px;">
+      <p><strong>Buyer Selfie Verification:</strong></p>
+      <img src="${noaData.signatoryData.photoDataUrl}" alt="Buyer Selfie" style="max-width: 220px; border: 1px solid #333; padding: 4px;">
+    </div>` : ''}
     
     <div class="signed-indicator">
         ✓ DIGITALLY SIGNED AND EXECUTED<br>
         Signed on ${signedDate} at ${signedTime}<br>
         IP Address: ${noaData.signatoryData?.ipAddress}<br>
-        Document Hash: ${noaData.token.substring(0, 16)}...
+        Document Hash: ${(noaData.noaId || '').substring(0, 16)}...
     </div>
 </body>
 </html>

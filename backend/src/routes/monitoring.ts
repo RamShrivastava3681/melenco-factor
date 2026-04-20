@@ -812,6 +812,139 @@ router.post('/alerts/bulk-resolve', (req, res) => {
   }
 });
 
+// Get collected fees summary and detailed breakdown
+router.get('/fees/summary', async (req, res) => {
+  try {
+    const transactions = await TransactionModel.find({}).lean();
+    const now = new Date();
+
+    const feeRows = transactions
+      .map((txn: any) => {
+        const lateFees = (txn.paymentHistory || []).reduce((sum: number, payment: any) => {
+          return sum + (typeof payment?.lateFeesPaid === 'number' ? payment.lateFeesPaid : 0);
+        }, 0);
+
+        const generalFeeAmount = typeof txn.feeAmount === 'number' ? txn.feeAmount : 0;
+        const transactionFee = typeof txn.transactionFee === 'number' ? txn.transactionFee : 0;
+        const processingFee = typeof txn.processingFee === 'number' ? txn.processingFee : 0;
+        const factoringFee = typeof txn.factoringFee === 'number' ? txn.factoringFee : 0;
+        const setupFee = typeof txn.setupFee === 'number' ? txn.setupFee : 0;
+        const totalFees =
+          generalFeeAmount +
+          transactionFee +
+          processingFee +
+          factoringFee +
+          setupFee +
+          lateFees;
+
+        return {
+          transactionId: txn.transactionId,
+          supplierName: txn.supplierName,
+          buyerName: txn.buyerName,
+          invoiceNumber: txn.invoiceNumber,
+          currency: txn.currency || 'USD',
+          status: txn.status || 'pending',
+          collectedDate: txn.lastPaymentAt || txn.updatedAt || txn.createdAt,
+          transactionFee,
+          processingFee,
+          factoringFee,
+          setupFee,
+          generalFeeAmount,
+          lateFees,
+          totalFees
+        };
+      })
+      .filter((row: any) => row.totalFees > 0)
+      .sort((a: any, b: any) => new Date(b.collectedDate).getTime() - new Date(a.collectedDate).getTime());
+
+    const totals = feeRows.reduce(
+      (acc: any, row: any) => {
+        acc.transactionFees += row.transactionFee;
+        acc.processingFees += row.processingFee;
+        acc.factoringFees += row.factoringFee;
+        acc.setupFees += row.setupFee;
+        acc.generalFees += row.generalFeeAmount;
+        acc.lateFees += row.lateFees;
+        acc.totalCollected += row.totalFees;
+
+        const collectedDate = new Date(row.collectedDate);
+        if (
+          collectedDate.getFullYear() === now.getFullYear() &&
+          collectedDate.getMonth() === now.getMonth()
+        ) {
+          acc.feesThisMonth += row.totalFees;
+        }
+
+        return acc;
+      },
+      {
+        transactionFees: 0,
+        processingFees: 0,
+        factoringFees: 0,
+        setupFees: 0,
+        generalFees: 0,
+        lateFees: 0,
+        totalCollected: 0,
+        feesThisMonth: 0
+      }
+    );
+
+    const serviceFees = totals.factoringFees + totals.setupFees;
+
+    const breakdown = [
+      { type: 'Transaction Fees', amount: totals.transactionFees },
+      { type: 'Processing Fees', amount: totals.processingFees },
+      { type: 'Factoring Fees', amount: totals.factoringFees },
+      { type: 'Setup Fees', amount: totals.setupFees },
+      { type: 'Late Fees', amount: totals.lateFees },
+      { type: 'General Fees', amount: totals.generalFees }
+    ].map((item) => ({
+      ...item,
+      percentage: totals.totalCollected > 0 ? (item.amount / totals.totalCollected) * 100 : 0
+    }));
+
+    const monthlyTrend = Array.from({ length: 6 }, (_, idx) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1);
+      const label = date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      const total = feeRows
+        .filter((row: any) => {
+          const rowDate = new Date(row.collectedDate);
+          return rowDate.getFullYear() === date.getFullYear() && rowDate.getMonth() === date.getMonth();
+        })
+        .reduce((sum: number, row: any) => sum + row.totalFees, 0);
+
+      return { label, total };
+    });
+
+    res.json({
+      success: true,
+      message: 'Fee summary retrieved successfully',
+      data: {
+        summary: {
+          totalCollected: totals.totalCollected,
+          feesThisMonth: totals.feesThisMonth,
+          transactionFees: totals.transactionFees,
+          processingFees: totals.processingFees,
+          factoringFees: totals.factoringFees,
+          setupFees: totals.setupFees,
+          generalFees: totals.generalFees,
+          lateFees: totals.lateFees,
+          serviceFees
+        },
+        breakdown,
+        monthlyTrend,
+        transactions: feeRows
+      }
+    });
+  } catch (error) {
+    console.error('Get fee summary error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
 // Send reserve details to treasury for processing
 router.post('/send-to-treasury', async (req, res) => {
   try {

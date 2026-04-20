@@ -11,9 +11,13 @@
     "start:dev": "ts-node src/index.ts",
     "watch": "tsc --watch",
     "clean": "rimraf dist",
-    "seed": "ts-node seed.ts"
+    "seed": "ts-node seed.ts",
+    "import:invoices": "ts-node import-invoices.ts",
+    "sync:invoice-parties": "ts-node sync-invoice-parties.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1029.0",
+    "@aws-sdk/s3-request-presigner": "^3.1029.0",
     "@types/crypto-js": "^4.2.2",
     "@types/nodemailer": "^7.0.11",
     "@types/uuid": "^10.0.0",
@@ -30,10 +34,12 @@
     "mongoose": "^9.1.5",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^8.0.1",
+    "pdf-parse": "^2.4.5",
     "puppeteer": "^24.37.5",
     "uuid": "^13.0.0",
     "winston": "^3.11.0",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

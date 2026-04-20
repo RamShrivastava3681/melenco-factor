@@ -27,6 +27,8 @@ export interface IEntity extends Document {
   utilizedLimit: number;
   availableLimit: number;
   email: string;
+  agreementFrameworkDocumentKey?: string;
+  agreementFrameworkDocumentName?: string;
   advanceRate: string;
   gracePeriod: string;
   transactionFees: {
@@ -91,6 +93,7 @@ export interface ITransaction extends Document {
   status: string;
   transactionType: string;
   supportingDocuments: string[];
+  supportingDocumentNames?: string[];
   buyerEmail: string;
   sendNOA: boolean;
   netAmount: number;
@@ -146,6 +149,25 @@ export interface INOA extends Document {
   emailSentAt?: Date;
   lastAccessedAt?: Date;
   accessCount: number;
+  acknowledgedAt?: Date;
+  signatoryData?: {
+    fullName: string;
+    position: string;
+    ipAddress: string;
+    userAgent: string;
+    signatureDataUrl: string;
+    photoDataUrl: string;
+    location: {
+      city: string;
+      country: string;
+      latitude: number;
+      longitude: number;
+      accuracy?: number;
+      capturedAt?: Date;
+    };
+  };
+  signedDocumentKey?: string;
+  signedDocumentFileName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -177,6 +199,8 @@ const EntitySchema = new Schema({
   utilizedLimit: { type: Number, default: 0 },
   availableLimit: { type: Number, default: 0 },
   email: { type: String, required: true },
+  agreementFrameworkDocumentKey: { type: String },
+  agreementFrameworkDocumentName: { type: String },
   advanceRate: { type: String, default: '80' },
   gracePeriod: { type: String, default: '5' },
   transactionFees: {
@@ -241,6 +265,7 @@ const TransactionSchema = new Schema({
   status: { type: String, default: 'pending' },
   transactionType: { type: String, default: 'factoring' },
   supportingDocuments: [{ type: String }],
+  supportingDocumentNames: [{ type: String }],
   buyerEmail: { type: String, required: true },
   sendNOA: { type: Boolean, default: false },
   netAmount: { type: Number, required: true },
@@ -295,7 +320,26 @@ const NOASchema = new Schema({
   emailSent: { type: Boolean, default: false },
   emailSentAt: { type: Date },
   lastAccessedAt: { type: Date },
-  accessCount: { type: Number, default: 0 }
+  accessCount: { type: Number, default: 0 },
+  acknowledgedAt: { type: Date },
+  signatoryData: {
+    fullName: { type: String },
+    position: { type: String },
+    ipAddress: { type: String },
+    userAgent: { type: String },
+    signatureDataUrl: { type: String },
+    photoDataUrl: { type: String },
+    location: {
+      city: { type: String },
+      country: { type: String },
+      latitude: { type: Number },
+      longitude: { type: Number },
+      accuracy: { type: Number },
+      capturedAt: { type: Date }
+    }
+  },
+  signedDocumentKey: { type: String },
+  signedDocumentFileName: { type: String }
 }, {
   timestamps: true
 });

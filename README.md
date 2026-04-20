@@ -63,8 +63,8 @@ npm run start:backend
 
 ## 🔐 Login Credentials
 
-- **Email:** `sankalp@whizunik.com`
-- **Password:** `Sankalp@8jan1983`
+- **Email:** Set in `frontend/.env` as `VITE_ADMIN_EMAIL`
+- **Password:** Set in `frontend/.env` as `VITE_ADMIN_PASSWORD`
 
 ## 📁 Directory Details
 
@@ -102,7 +102,7 @@ npm run start:backend
 
 2. **Frontend Development:**
    - Navigate to `http://localhost:8080`
-   - Login with provided credentials
+   - Login with credentials configured in `frontend/.env`
    - Hot reload enabled for instant feedback
 
 3. **Backend API Development:**

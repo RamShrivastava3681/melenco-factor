@@ -1,12 +1,18 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import multer from 'multer';
 import { broadcastNotification } from '../index';
 import { EntityModel, IEntity } from '../models/schemas';
+import { uploadDocumentToS3 } from '../utils/s3';
 
 // Mock data as fallback
 import { mockBuyers, mockSuppliers } from '../../mockData';
 
 const router = express.Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 }
+});
 
 // Combine mock buyers and suppliers as entities
 const mockEntities = [...mockBuyers, ...mockSuppliers];
@@ -179,9 +185,11 @@ router.get('/suppliers/:id', async (req, res) => {
 });
 
 // Create new entity
-router.post('/', async (req, res) => {
+router.post('/', upload.single('agreementFrameworkDocument'), async (req, res) => {
   try {
-    const entityData = req.body;
+    const entityData = typeof req.body.payload === 'string'
+      ? JSON.parse(req.body.payload)
+      : req.body;
     const currency = String(entityData.currency || entityData?.bankDetails?.currency || 'USD').toUpperCase();
     const allowedCurrencies = ['USD', 'EUR', 'GBP'];
 
@@ -201,8 +209,23 @@ router.post('/', async (req, res) => {
     }
     
     // Create new entity with generated ID and timestamps
+    const generatedEntityId = `${entityData.type?.toUpperCase() || 'ENT'}-${Date.now().toString().slice(-6)}`;
+    let agreementFrameworkDocumentKey: string | undefined;
+    let agreementFrameworkDocumentName: string | undefined;
+
+    if (req.file) {
+      const uploaded = await uploadDocumentToS3({
+        folder: `entities/${generatedEntityId}`,
+        fileName: req.file.originalname,
+        contentType: req.file.mimetype || 'application/octet-stream',
+        body: req.file.buffer
+      });
+      agreementFrameworkDocumentKey = uploaded.key;
+      agreementFrameworkDocumentName = req.file.originalname;
+    }
+
     const newEntity = new EntityModel({
-      entityId: `${entityData.type?.toUpperCase() || 'ENT'}-${Date.now().toString().slice(-6)}`,
+      entityId: generatedEntityId,
       name: entityData.name,
       currency,
       type: entityData.type, // 'supplier' or 'buyer'
@@ -275,7 +298,9 @@ router.post('/', async (req, res) => {
       industry: entityData.industry,
       taxId: entityData.taxId,
       notes: entityData.notes,
-      email: entityData.email
+      email: entityData.email,
+      agreementFrameworkDocumentKey,
+      agreementFrameworkDocumentName
     });
 
     // Save to MongoDB

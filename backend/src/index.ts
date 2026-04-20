@@ -23,6 +23,7 @@ import reportsRoutes from './routes/reports';
 import notificationsRoutes from './routes/notifications';
 import noaRoutes from './routes/noa';
 import currencyRoutes from './routes/currency';
+import documentsRoutes from './routes/documents';
 // Load environment variables
 dotenv.config();
 // Create Express app and HTTP server
@@ -153,6 +154,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/noa', noaRoutes);
 app.use('/api/currency', currencyRoutes);
+app.use('/api/documents', documentsRoutes);
 // Error handling middleware
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', error);

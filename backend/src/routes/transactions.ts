@@ -1,12 +1,18 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import multer from 'multer';
 import { broadcastNotification } from '../index';
 import { TransactionModel, ITransaction, EntityModel } from '../models/schemas';
+import { uploadDocumentToS3 } from '../utils/s3';
 
 // Mock data as fallback
 import { mockTransactions } from '../../mockData';
 
 const router = express.Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 }
+});
 
 // Get all transactions - now returns stored transactions
 router.get('/', async (req, res) => {
@@ -90,9 +96,11 @@ const calculateDueDate = (invoiceDate: string, blDate: string, tenureDays: numbe
 };
 
 // Create new transaction (maintains demo data)
-router.post('/', async (req, res) => {
+router.post('/', upload.array('supportingDocuments', 20), async (req, res) => {
   try {
-    const transactionData = req.body;
+    const transactionData = typeof req.body.payload === 'string'
+      ? JSON.parse(req.body.payload)
+      : req.body;
     console.log('=== TRANSACTION CREATION DEBUG ===');
     console.log('Received transaction data:', JSON.stringify(transactionData, null, 2));
     
@@ -126,6 +134,21 @@ router.post('/', async (req, res) => {
     const timestamp = Date.now();
     const transactionId = `TXN-${timestamp.toString().slice(-6)}`;
     const invoiceId = `INV-${timestamp.toString().slice(-6)}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+
+    const uploadedFiles = (req.files as Express.Multer.File[] | undefined) || [];
+    const supportingDocumentKeys: string[] = [];
+    const supportingDocumentNames: string[] = [];
+
+    for (const file of uploadedFiles) {
+      const uploaded = await uploadDocumentToS3({
+        folder: `transactions/${transactionId}`,
+        fileName: file.originalname,
+        contentType: file.mimetype || 'application/octet-stream',
+        body: file.buffer
+      });
+      supportingDocumentKeys.push(uploaded.key);
+      supportingDocumentNames.push(file.originalname);
+    }
     
     // Ensure required fields are present
     const requiredFields = {
@@ -207,6 +230,8 @@ router.post('/', async (req, res) => {
       invoiceId,
       ...transactionData,
       ...requiredFields,
+      supportingDocuments: supportingDocumentKeys,
+      supportingDocumentNames,
       dueDate: calculatedDueDate,
       status: transactionData.status || 'pending',
       currency: requestedCurrency,

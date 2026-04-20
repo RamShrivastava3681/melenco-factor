@@ -794,15 +794,21 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
       console.log('Form data being sent:', JSON.stringify(formData, null, 2));
       console.log('Selected Supplier:', selectedSupplier);
       console.log('Selected Buyer:', selectedBuyer);
+
+      const requestFormData = new FormData();
+      const { supportingDocuments, ...payload } = formData;
+      requestFormData.append('payload', JSON.stringify(payload));
+      supportingDocuments.forEach((file) => {
+        requestFormData.append('supportingDocuments', file);
+      });
       
       // Send the data to the backend API
       const response = await fetch(createApiUrl('/transactions'), {
         method: 'POST',
         headers: { 
-          ...getApiHeaders(),
-          'Content-Type': 'application/json'
+          ...getApiHeaders({ json: false })
         },
-        body: JSON.stringify(formData)
+        body: requestFormData
       });
       
       if (!response.ok) {

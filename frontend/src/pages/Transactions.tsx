@@ -172,6 +172,14 @@ export default function Transactions() {
     return variants[status] || variants.pending;
   };
 
+  const downloadDocument = (key: string, fileName?: string) => {
+    const query = new URLSearchParams({ key });
+    if (fileName) {
+      query.set('fileName', fileName);
+    }
+    window.open(createApiUrl(`/documents/download?${query.toString()}`), '_blank');
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -337,6 +345,26 @@ export default function Transactions() {
                           <p className="text-xs text-blue-600">
                             Tenure: {transaction.tenureDays} days
                           </p>
+                        )}
+                        {Array.isArray(transaction.supportingDocuments) && transaction.supportingDocuments.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {transaction.supportingDocuments.map((docKey: string, idx: number) => (
+                              <Button
+                                key={`${transaction.transactionId}-doc-${idx}`}
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-xs"
+                                onClick={() =>
+                                  downloadDocument(
+                                    docKey,
+                                    transaction.supportingDocumentNames?.[idx] || `transaction-doc-${idx + 1}`
+                                  )
+                                }
+                              >
+                                Doc {idx + 1}
+                              </Button>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </TableCell>

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { Users, TrendingUp } from 'lucide-react';
 
 interface BuyerAssignment {
@@ -96,6 +97,14 @@ export function EntityDetailsDialog({ open, onOpenChange, entity }: EntityDetail
     if (entity.country) parts.push(entity.country);
     if (entity.pincode) parts.push(entity.pincode);
     return parts.join(', ') || 'Address not provided';
+  };
+
+  const downloadDocument = (key: string, fileName?: string) => {
+    const query = new URLSearchParams({ key });
+    if (fileName) {
+      query.set('fileName', fileName);
+    }
+    window.open(createApiUrl(`/documents/download?${query.toString()}`), '_blank');
   };
 
   return (
@@ -397,6 +406,26 @@ export function EntityDetailsDialog({ open, onOpenChange, entity }: EntityDetail
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Additional Account Details</label>
                     <p className="text-sm mt-1 p-2 bg-muted rounded">{entity.additionalAccDetail}</p>
+                  </div>
+                )}
+
+                {entity.agreementFrameworkDocumentKey && (
+                  <div className="pt-2">
+                    <label className="text-sm font-medium text-muted-foreground">Agreement Framework Document</label>
+                    <div className="mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          downloadDocument(
+                            entity.agreementFrameworkDocumentKey,
+                            entity.agreementFrameworkDocumentName || 'agreement-framework-document'
+                          )
+                        }
+                      >
+                        Download Agreement Document
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>

@@ -5,10 +5,20 @@ import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
+const getRequiredEnv = (key: string): string => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
+};
+
+const jwtSecret = getRequiredEnv('JWT_SECRET');
+
 // Mock user for demo purposes
 const DEMO_USER = {
-  email: process.env.ADMIN_EMAIL || 'admin@whizunik.com',
-  password: process.env.ADMIN_PASSWORD || 'defaultpassword', // In production, this would be hashed
+  email: getRequiredEnv('ADMIN_EMAIL'),
+  password: getRequiredEnv('ADMIN_PASSWORD'), // In production, this would be hashed
   name: 'Sankalp',
   role: 'admin',
   id: '1'
@@ -49,7 +59,7 @@ router.post('/login',
           name: DEMO_USER.name,
           role: DEMO_USER.role
         },
-        process.env.JWT_SECRET || 'whizunik-factoring-secret',
+        jwtSecret,
         { expiresIn: '24h' }
       );
 
@@ -89,7 +99,7 @@ router.get('/verify', async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'whizunik-factoring-secret') as any;
+    const decoded = jwt.verify(token, jwtSecret) as any;
     
     res.json({
       success: true,

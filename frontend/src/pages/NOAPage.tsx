@@ -10,6 +10,14 @@ import { toast } from 'sonner';
 import { createApiUrl } from '@/config/api';
 import { formatDate } from '@/lib/utils';
 
+interface BuyerLocation {
+  city: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+}
+
 interface NOAData {
   noaData: {
     id: string;
@@ -31,6 +39,23 @@ interface NOAData {
     invoiceData: any;
   };
   transaction: any;
+  partyDetails?: {
+    buyer?: {
+      name?: string;
+      addressLines?: string[];
+      email?: string;
+    };
+    supplier?: {
+      name?: string;
+      addressLines?: string[];
+      email?: string;
+      phone?: string;
+    };
+    support?: {
+      email?: string;
+      phone?: string;
+    };
+  };
   canSign: boolean;
 }
 
@@ -126,6 +151,14 @@ export function NOAPage() {
   // Signature form data
   const [fullName, setFullName] = useState('');
   const [position, setPosition] = useState('');
+  const [buyerLocation, setBuyerLocation] = useState<BuyerLocation | null>(null);
+  const [capturingLocation, setCapturingLocation] = useState(false);
+  const [photoDataUrl, setPhotoDataUrl] = useState('');
+  const [startingCamera, setStartingCamera] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const captureCanvasRef = useRef<HTMLCanvasElement>(null);
   const signatureRef = useRef<SignatureCanvasRef>(null);
   
   // Success state
@@ -141,6 +174,137 @@ export function NOAPage() {
 
     loadNOAData();
   }, [token]);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      captureLocation();
+    }
+
+    startCamera();
+
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      setStartingCamera(true);
+      setCameraError('');
+
+      stopCamera();
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' },
+        audio: false
+      });
+
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch (err) {
+      setCameraError('Camera permission denied or camera not available');
+      toast.error('Please allow camera access to capture a live selfie');
+    } finally {
+      setStartingCamera(false);
+    }
+  };
+
+  const captureSelfie = () => {
+    const video = videoRef.current;
+    const canvas = captureCanvasRef.current;
+
+    if (!video || !canvas) {
+      toast.error('Camera is not ready yet');
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      toast.error('Unable to capture selfie');
+      return;
+    }
+
+    canvas.width = video.videoWidth || 480;
+    canvas.height = video.videoHeight || 360;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageDataUrl = canvas.toDataURL('image/png');
+    setPhotoDataUrl(imageDataUrl);
+    toast.success('Selfie captured successfully');
+  };
+
+  const reverseGeocode = async (latitude: number, longitude: number) => {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+    );
+
+    if (!response.ok) {
+      throw new Error('Reverse geocoding failed');
+    }
+
+    const data = await response.json();
+    const address = data?.address || {};
+    const city = address.city || address.town || address.village || address.state_district || address.county;
+    const country = address.country;
+
+    if (!city || !country) {
+      throw new Error('City/Country not found for your location');
+    }
+
+    return { city, country };
+  };
+
+  const captureLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported in this browser');
+      return;
+    }
+
+    setCapturingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          const resolvedLocation = await reverseGeocode(latitude, longitude);
+
+          setBuyerLocation({
+            city: resolvedLocation.city,
+            country: resolvedLocation.country,
+            latitude,
+            longitude,
+            accuracy: position.coords.accuracy
+          });
+        } catch (locationError) {
+          toast.error(locationError instanceof Error ? locationError.message : 'Unable to resolve city/country from location');
+          setBuyerLocation(null);
+        } finally {
+          setCapturingLocation(false);
+        }
+      },
+      (geoError) => {
+        setCapturingLocation(false);
+        toast.error(`Unable to capture location: ${geoError.message}`);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
 
   const loadNOAData = async () => {
     try {
@@ -178,6 +342,21 @@ export function NOAPage() {
       return;
     }
 
+    if (!buyerLocation) {
+      toast.error('Please allow and capture your current location');
+      return;
+    }
+
+    if (!photoDataUrl) {
+      toast.error('Please capture your live selfie');
+      return;
+    }
+
+    if (!buyerLocation.city || !buyerLocation.country) {
+      toast.error('Please allow location access to capture your city and country');
+      return;
+    }
+
     try {
       setSubmitting(true);
       
@@ -189,7 +368,9 @@ export function NOAPage() {
         body: JSON.stringify({
           fullName,
           position,
-          signatureDataUrl
+          signatureDataUrl,
+          location: buyerLocation,
+          photoDataUrl
         })
       });
 
@@ -305,8 +486,8 @@ export function NOAPage() {
               
               <div className="mt-8 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
                 <p><strong>Support Contact:</strong></p>
-                <p>Email: finance@whizunik.com</p>
-                <p>Phone: +44 (0)20 7000 0000</p>
+                <p>Email: {noaData.partyDetails?.support?.email || 'admin@whizunik.com'}</p>
+                <p>Phone: {noaData.partyDetails?.support?.phone || '+91-9958880183'}</p>
               </div>
             </CardContent>
           </Card>
@@ -342,17 +523,24 @@ export function NOAPage() {
           <div>
             <h3 className="font-semibold text-lg">{noaData.transaction.buyerName}</h3>
             <div className="mt-2 text-gray-700 leading-relaxed">
-              <div>[Buyer Address Line 1]</div>
-              <div>[Buyer Address Line 2]</div>
-              <div>[Buyer Address Line 3]</div>
+              {(noaData.partyDetails?.buyer?.addressLines?.length
+                ? noaData.partyDetails.buyer.addressLines
+                : ['Address not available'])
+                .map((line, index) => (
+                  <div key={`buyer-address-${index}`}>{line}</div>
+                ))}
             </div>
           </div>
           <div className="text-right">
             <div className="font-semibold">Your Supplier:</div>
             <div className="font-semibold text-lg">{noaData.transaction.supplierName}</div>
             <div className="mt-2 text-gray-700 leading-relaxed">
-              <div>[Supplier Address Line 1]</div>
-              <div>[Supplier Address Line 2]</div>
+              {(noaData.partyDetails?.supplier?.addressLines?.length
+                ? noaData.partyDetails.supplier.addressLines
+                : ['Address not available'])
+                .map((line, index) => (
+                  <div key={`supplier-address-${index}`}>{line}</div>
+                ))}
             </div>
           </div>
         </div>
@@ -410,22 +598,9 @@ export function NOAPage() {
             <li>The goods and/or services represented by the invoice have been delivered and conform to your requirements;</li>
             <li>There is no consignment, retention of title, or similar arrangement affecting these goods;</li>
             <li>You will pay the invoice amount in full without any deduction, set-off, or counterclaim;</li>
-            <li>Payment will be made directly to the bank account detailed below;</li>
+            <li>Payment will be made directly to the designated account communicated by us;</li>
             <li>You confirm compliance with all applicable anti-bribery and corruption laws.</li>
           </ol>
-        </div>
-
-        {/* Bank Account Section */}
-        <div className="mb-8 p-4 border-2 border-gray-900">
-          <h3 className="font-semibold mb-3">Payment Details:</h3>
-          <div className="space-y-1">
-            <p><span className="font-medium">Account Name:</span> Whizunik Financial Services Ltd</p>
-            <p><span className="font-medium">Bank:</span> Barclays Bank PLC</p>
-            <p><span className="font-medium">Account Number:</span> 12345678</p>
-            <p><span className="font-medium">Sort Code:</span> 20-00-00</p>
-            <p><span className="font-medium">IBAN:</span> GB29 BARC 2000 0012 3456 78</p>
-            <p><span className="font-medium">SWIFT:</span> BARCGB22</p>
-          </div>
         </div>
 
         {/* Legal Jurisdiction */}
@@ -491,6 +666,67 @@ export function NOAPage() {
                   </div>
                 </div>
 
+                <div className="space-y-3 p-3 border rounded-md bg-gray-50">
+                  <Label>Live Buyer Selfie *</Label>
+                  <video
+                    ref={videoRef}
+                    className="w-full max-w-xs rounded-md border bg-black"
+                    autoPlay
+                    playsInline
+                    muted
+                  />
+                  <canvas ref={captureCanvasRef} className="hidden" />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={startCamera}
+                      disabled={startingCamera}
+                    >
+                      {startingCamera ? 'Opening Camera...' : 'Enable Camera'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={captureSelfie}
+                    >
+                      Click Selfie
+                    </Button>
+                  </div>
+                  {cameraError && <p className="text-sm text-red-600">{cameraError}</p>}
+                  {photoDataUrl && (
+                    <img
+                      src={photoDataUrl}
+                      alt="Captured buyer selfie preview"
+                      className="w-28 h-28 rounded-md object-cover border"
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-3 p-3 border rounded-md bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <Label>Current Location *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={captureLocation}
+                      disabled={capturingLocation}
+                    >
+                      {capturingLocation ? 'Capturing...' : 'Refresh Location'}
+                    </Button>
+                  </div>
+                  {buyerLocation ? (
+                    <p className="text-sm text-gray-700">
+                      {buyerLocation.city}, {buyerLocation.country}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-red-600">City and country not captured yet.</p>
+                  )}
+                </div>
+
                 <p className="text-sm text-gray-600">
                   <strong>Date:</strong> {formatDate(new Date())}
                 </p>
@@ -523,6 +759,9 @@ export function NOAPage() {
           <Button onClick={() => window.print()} variant="outline">
             Print Document
           </Button>
+          <p className="mt-4 text-sm text-gray-600">
+            Contact: {noaData.partyDetails?.support?.email || 'admin@whizunik.com'} | {noaData.partyDetails?.support?.phone || '+91-9958880183'}
+          </p>
         </div>
       </div>
     </div>

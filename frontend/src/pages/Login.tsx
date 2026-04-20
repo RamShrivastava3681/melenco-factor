@@ -8,9 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
+const ADMIN_NAME = import.meta.env.VITE_ADMIN_NAME || 'Admin';
+
 const VALID_CREDENTIALS = {
-  email: 'sankalp@whizunik.com',
-  password: 'Sankalp@8jan1983'
+  email: ADMIN_EMAIL,
+  password: ADMIN_PASSWORD
 };
 
 export function Login() {
@@ -28,6 +32,11 @@ export function Login() {
     setLoading(true);
 
     try {
+      if (!VALID_CREDENTIALS.email || !VALID_CREDENTIALS.password) {
+        setError('Login credentials are not configured. Set VITE_ADMIN_EMAIL and VITE_ADMIN_PASSWORD in .env.');
+        return;
+      }
+
       // Validate credentials
       if (email === VALID_CREDENTIALS.email && password === VALID_CREDENTIALS.password) {
         // Simulate API call delay
@@ -36,7 +45,7 @@ export function Login() {
         // Generate a mock JWT token
         const mockToken = btoa(JSON.stringify({
           email: email,
-          name: 'Sankalp',
+          name: ADMIN_NAME,
           role: 'admin',
           exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours from now
         }));

@@ -127,6 +127,74 @@ interface MonitoringDashboard {
   lastUpdated: string;
 }
 
+interface SignedNOARecord {
+  _id: string;
+  noaId: string;
+  transactionId: string;
+  supplierName: string;
+  buyerName: string;
+  invoiceNumber: string;
+  invoiceValue: number;
+  dueDate?: string;
+  acknowledgedAt?: string;
+  updatedAt?: string;
+  buyerEmail?: string;
+  signatoryData?: {
+    fullName?: string;
+    position?: string;
+    ipAddress?: string;
+    userAgent?: string;
+    signatureDataUrl?: string;
+    photoDataUrl?: string;
+    location?: {
+      city?: string;
+      country?: string;
+      latitude?: number;
+      longitude?: number;
+    };
+  };
+}
+
+interface FeesSummary {
+  totalCollected: number;
+  feesThisMonth: number;
+  transactionFees: number;
+  processingFees: number;
+  factoringFees: number;
+  setupFees: number;
+  generalFees: number;
+  lateFees: number;
+  serviceFees: number;
+}
+
+interface FeeBreakdownItem {
+  type: string;
+  amount: number;
+  percentage: number;
+}
+
+interface FeeMonthlyTrendItem {
+  label: string;
+  total: number;
+}
+
+interface FeeTransactionRow {
+  transactionId: string;
+  supplierName: string;
+  buyerName: string;
+  invoiceNumber: string;
+  currency: string;
+  status: string;
+  collectedDate: string;
+  transactionFee: number;
+  processingFee: number;
+  factoringFee: number;
+  setupFee: number;
+  generalFeeAmount: number;
+  lateFees: number;
+  totalFees: number;
+}
+
 export default function Monitoring() {
   const [dashboard, setDashboard] = useState<MonitoringDashboard | null>(null);
   const [transactionMonitoring, setTransactionMonitoring] = useState<TransactionMonitoring[]>([]);
@@ -151,6 +219,23 @@ export default function Monitoring() {
   });
   const [loading, setLoading] = useState(true);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [feesLoading, setFeesLoading] = useState(false);
+  const [feesSummary, setFeesSummary] = useState<FeesSummary>({
+    totalCollected: 0,
+    feesThisMonth: 0,
+    transactionFees: 0,
+    processingFees: 0,
+    factoringFees: 0,
+    setupFees: 0,
+    generalFees: 0,
+    lateFees: 0,
+    serviceFees: 0
+  });
+  const [feesBreakdown, setFeesBreakdown] = useState<FeeBreakdownItem[]>([]);
+  const [feesMonthlyTrend, setFeesMonthlyTrend] = useState<FeeMonthlyTrendItem[]>([]);
+  const [feeTransactions, setFeeTransactions] = useState<FeeTransactionRow[]>([]);
+  const [signedNoasLoading, setSignedNoasLoading] = useState(false);
+  const [signedNoas, setSignedNoas] = useState<SignedNOARecord[]>([]);
   const [activeTab, setActiveTab] = useState('open-invoices');
   
   // Dialog states
@@ -172,8 +257,93 @@ export default function Monitoring() {
       loadOpenInvoices();
     } else if (activeTab === 'closed-invoices') {
       loadClosedInvoices();
+    } else if (activeTab === 'fees') {
+      loadFeesData();
+    } else if (activeTab === 'noa-signed') {
+      loadSignedNoas();
     }
   }, [activeTab]);
+
+  const loadFeesData = async () => {
+    setFeesLoading(true);
+    try {
+      const response = await fetch(createApiUrl('/monitoring/fees/summary'), {
+        headers: getApiHeaders()
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setFeesSummary(result?.data?.summary || {
+          totalCollected: 0,
+          feesThisMonth: 0,
+          transactionFees: 0,
+          processingFees: 0,
+          factoringFees: 0,
+          setupFees: 0,
+          generalFees: 0,
+          lateFees: 0,
+          serviceFees: 0
+        });
+        setFeesBreakdown(result?.data?.breakdown || []);
+        setFeesMonthlyTrend(result?.data?.monthlyTrend || []);
+        setFeeTransactions(result?.data?.transactions || []);
+      } else {
+        setFeesSummary({
+          totalCollected: 0,
+          feesThisMonth: 0,
+          transactionFees: 0,
+          processingFees: 0,
+          factoringFees: 0,
+          setupFees: 0,
+          generalFees: 0,
+          lateFees: 0,
+          serviceFees: 0
+        });
+        setFeesBreakdown([]);
+        setFeesMonthlyTrend([]);
+        setFeeTransactions([]);
+      }
+    } catch (error) {
+      console.error('Failed to load fees data:', error);
+      setFeesSummary({
+        totalCollected: 0,
+        feesThisMonth: 0,
+        transactionFees: 0,
+        processingFees: 0,
+        factoringFees: 0,
+        setupFees: 0,
+        generalFees: 0,
+        lateFees: 0,
+        serviceFees: 0
+      });
+      setFeesBreakdown([]);
+      setFeesMonthlyTrend([]);
+      setFeeTransactions([]);
+    } finally {
+      setFeesLoading(false);
+    }
+  };
+
+  const loadSignedNoas = async () => {
+    setSignedNoasLoading(true);
+    try {
+      const response = await fetch(createApiUrl('/noa/signed'), {
+        headers: getApiHeaders()
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setSignedNoas(result.data || []);
+      } else {
+        setSignedNoas([]);
+      }
+    } catch (error) {
+      console.error('Failed to load signed NOAs:', error);
+      setSignedNoas([]);
+    } finally {
+      setSignedNoasLoading(false);
+    }
+  };
 
   const loadClosedInvoices = async () => {
     setInvoicesLoading(true);
@@ -646,9 +816,143 @@ export default function Monitoring() {
           <TabsTrigger value="open-invoices">Open Invoices</TabsTrigger>
           <TabsTrigger value="due-invoices">Due Invoices</TabsTrigger>
           <TabsTrigger value="closed-invoices">Closed Invoices</TabsTrigger>
+          <TabsTrigger value="noa-signed">NOA Signed</TabsTrigger>
           <TabsTrigger value="fees">Fees</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="noa-signed" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Signed NOAs</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">{signedNoas.length}</div>
+                <p className="text-xs text-muted-foreground">Total acknowledged records</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">With Selfie</CardTitle>
+                <Eye className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {signedNoas.filter((item) => !!item.signatoryData?.photoDataUrl).length}
+                </div>
+                <p className="text-xs text-muted-foreground">Photo captured records</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">With Location</CardTitle>
+                <Activity className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">
+                  {signedNoas.filter((item) => !!item.signatoryData?.location?.city && !!item.signatoryData?.location?.country).length}
+                </div>
+                <p className="text-xs text-muted-foreground">City/Country captured</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Signed NOA Records</CardTitle>
+              <CardDescription>All acknowledged NOAs with signatory, selfie, signature, and location details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Transaction</TableHead>
+                    <TableHead>Buyer / Supplier</TableHead>
+                    <TableHead>Signatory</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Signed At</TableHead>
+                    <TableHead>Proof</TableHead>
+                    <TableHead>NOA Document</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {signedNoasLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        Loading signed NOAs...
+                      </TableCell>
+                    </TableRow>
+                  ) : signedNoas.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        No signed NOAs found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    signedNoas.map((record) => (
+                      <TableRow key={record._id || record.noaId}>
+                        <TableCell>
+                          <div className="font-medium">{record.transactionId}</div>
+                          <div className="text-xs text-muted-foreground">Invoice: {record.invoiceNumber}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div>{record.buyerName}</div>
+                          <div className="text-xs text-muted-foreground">Supplier: {record.supplierName}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div>{record.signatoryData?.fullName || '-'}</div>
+                          <div className="text-xs text-muted-foreground">{record.signatoryData?.position || '-'}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div>{record.signatoryData?.location?.city || '-'}</div>
+                          <div className="text-xs text-muted-foreground">{record.signatoryData?.location?.country || '-'}</div>
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(record.acknowledgedAt || record.updatedAt || '')}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {record.signatoryData?.photoDataUrl ? (
+                              <img
+                                src={record.signatoryData.photoDataUrl}
+                                alt="Selfie"
+                                className="h-10 w-10 rounded-md object-cover border"
+                              />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No selfie</span>
+                            )}
+                            {record.signatoryData?.signatureDataUrl ? (
+                              <img
+                                src={record.signatoryData.signatureDataUrl}
+                                alt="Signature"
+                                className="h-10 w-16 rounded-md object-contain border bg-white"
+                              />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No signature</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(createApiUrl(`/noa/${record.noaId}/pdf`), '_blank')}
+                          >
+                            Download PDF
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="due-invoices" className="space-y-6">
           {/* Due Invoices Summary Cards */}
@@ -747,9 +1051,9 @@ export default function Monitoring() {
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">$0</div>
+                <div className="text-2xl font-bold text-green-600">{formatCurrency(feesSummary.totalCollected)}</div>
                 <p className="text-xs text-muted-foreground">
-                  This month
+                  All-time collected
                 </p>
               </CardContent>
             </Card>
@@ -760,7 +1064,7 @@ export default function Monitoring() {
                 <AlertTriangle className="h-4 w-4 text-orange-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">$0</div>
+                <div className="text-2xl font-bold text-orange-600">{formatCurrency(feesSummary.lateFees)}</div>
                 <p className="text-xs text-muted-foreground">
                   Penalty charges
                 </p>
@@ -773,9 +1077,9 @@ export default function Monitoring() {
                 <Activity className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">$0</div>
+                <div className="text-2xl font-bold text-blue-600">{formatCurrency(feesSummary.transactionFees)}</div>
                 <p className="text-xs text-muted-foreground">
-                  Processing fees
+                  Transaction fee component
                 </p>
               </CardContent>
             </Card>
@@ -786,7 +1090,7 @@ export default function Monitoring() {
                 <TrendingUp className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-purple-600">$0</div>
+                <div className="text-2xl font-bold text-purple-600">{formatCurrency(feesSummary.serviceFees)}</div>
                 <p className="text-xs text-muted-foreground">
                   Additional services
                 </p>
@@ -803,36 +1107,24 @@ export default function Monitoring() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <span className="font-medium">Transaction Fees</span>
-                      <Progress value={0} className="flex-1 max-w-xs" />
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">$0</div>
-                      <div className="text-xs text-muted-foreground">0%</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <span className="font-medium">Late Fees</span>
-                      <Progress value={0} className="flex-1 max-w-xs" />
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">$0</div>
-                      <div className="text-xs text-muted-foreground">0%</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <span className="font-medium">Service Fees</span>
-                      <Progress value={0} className="flex-1 max-w-xs" />
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold">$0</div>
-                      <div className="text-xs text-muted-foreground">0%</div>
-                    </div>
-                  </div>
+                  {feesLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading fee breakdown...</div>
+                  ) : feesBreakdown.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">No fee breakdown available</div>
+                  ) : (
+                    feesBreakdown.map((item) => (
+                      <div key={item.type} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <span className="font-medium">{item.type}</span>
+                          <Progress value={Math.max(0, Math.min(100, item.percentage))} className="flex-1 max-w-xs" />
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold">{formatCurrency(item.amount)}</div>
+                          <div className="text-xs text-muted-foreground">{item.percentage.toFixed(1)}%</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -844,13 +1136,18 @@ export default function Monitoring() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">January 2026</span>
-                    <span className="font-medium">$0</span>
-                  </div>
-                  <div className="text-center py-8 text-muted-foreground">
-                    No historical fee data available
-                  </div>
+                  {feesLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading monthly trend...</div>
+                  ) : feesMonthlyTrend.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">No historical fee data available</div>
+                  ) : (
+                    feesMonthlyTrend.map((item) => (
+                      <div key={item.label} className="flex justify-between items-center">
+                        <span className="text-sm">{item.label}</span>
+                        <span className="font-medium">{formatCurrency(item.total)}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -876,11 +1173,51 @@ export default function Monitoring() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      No fee collection data available
-                    </TableCell>
-                  </TableRow>
+                  {feesLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        Loading fee collection data...
+                      </TableCell>
+                    </TableRow>
+                  ) : feeTransactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        No fee collection data available
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    feeTransactions.map((row) => (
+                      <TableRow key={`${row.transactionId}-${row.invoiceNumber}`}>
+                        <TableCell className="font-mono">{row.transactionId}</TableCell>
+                        <TableCell>
+                          <div>{row.supplierName || '-'}</div>
+                          <div className="text-xs text-muted-foreground">Buyer: {row.buyerName || '-'}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1 text-xs">
+                            <div>Transaction: {formatCurrency(row.transactionFee)}</div>
+                            <div>Processing: {formatCurrency(row.processingFee)}</div>
+                            <div>Factoring: {formatCurrency(row.factoringFee)}</div>
+                            <div>Setup: {formatCurrency(row.setupFee)}</div>
+                            <div>General: {formatCurrency(row.generalFeeAmount)}</div>
+                            <div>Late: {formatCurrency(row.lateFees)}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-bold">{formatCurrency(row.totalFees)}</TableCell>
+                        <TableCell>{formatDate(row.collectedDate)}</TableCell>
+                        <TableCell>
+                          <Badge variant={['closed', 'paid', 'completed', 'settled'].includes((row.status || '').toLowerCase()) ? 'default' : 'secondary'}>
+                            {['closed', 'paid', 'completed', 'settled'].includes((row.status || '').toLowerCase()) ? 'Collected' : 'Pending'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm" disabled>
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

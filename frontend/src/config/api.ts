@@ -29,10 +29,12 @@ export const createWebSocketUrl = (): string => {
 };
 
 // Default headers for API requests
-export const getApiHeaders = (): HeadersInit => {
+export const getApiHeaders = (options?: { json?: boolean }): HeadersInit => {
   const token = localStorage.getItem('token');
+  const useJson = options?.json !== false;
+
   return {
-    'Content-Type': 'application/json',
+    ...(useJson && { 'Content-Type': 'application/json' }),
     ...(token && { 'Authorization': `Bearer ${token}` })
   };
 };
