@@ -13,16 +13,16 @@ const getRequiredEnv = (key: string): string => {
   return value;
 };
 
-const jwtSecret = getRequiredEnv('JWT_SECRET');
+const getJwtSecret = (): string => getRequiredEnv('JWT_SECRET');
 
-// Mock user for demo purposes
-const DEMO_USER = {
+const getDemoUser = () => ({
+  // Mock user for demo purposes
   email: getRequiredEnv('ADMIN_EMAIL'),
   password: getRequiredEnv('ADMIN_PASSWORD'), // In production, this would be hashed
   name: 'Sankalp',
   role: 'admin',
   id: '1'
-};
+});
 
 // Login endpoint
 router.post('/login',
@@ -42,9 +42,10 @@ router.post('/login',
       }
 
       const { email, password } = req.body;
+      const demoUser = getDemoUser();
 
       // Check credentials against demo user
-      if (email !== DEMO_USER.email || password !== DEMO_USER.password) {
+      if (email !== demoUser.email || password !== demoUser.password) {
         return res.status(401).json({
           success: false,
           message: 'Invalid credentials'
@@ -54,12 +55,12 @@ router.post('/login',
       // Generate JWT token
       const token = jwt.sign(
         {
-          id: DEMO_USER.id,
-          email: DEMO_USER.email,
-          name: DEMO_USER.name,
-          role: DEMO_USER.role
+          id: demoUser.id,
+          email: demoUser.email,
+          name: demoUser.name,
+          role: demoUser.role
         },
-        jwtSecret,
+        getJwtSecret(),
         { expiresIn: '24h' }
       );
 
@@ -69,10 +70,10 @@ router.post('/login',
         data: {
           token,
           user: {
-            id: DEMO_USER.id,
-            email: DEMO_USER.email,
-            name: DEMO_USER.name,
-            role: DEMO_USER.role
+            id: demoUser.id,
+            email: demoUser.email,
+            name: demoUser.name,
+            role: demoUser.role
           }
         }
       });
@@ -99,7 +100,7 @@ router.get('/verify', async (req, res) => {
       });
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as any;
+    const decoded = jwt.verify(token, getJwtSecret()) as any;
     
     res.json({
       success: true,
