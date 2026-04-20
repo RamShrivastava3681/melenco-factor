@@ -14,6 +14,16 @@ const NOA_AUDIT_RECIPIENT = 'ramshri860499@gmail.com';
 const NOA_SUPPORT_EMAIL = 'admin@whizunik.com';
 const NOA_SUPPORT_PHONE = '+91-9958880183';
 
+const getNoaFrontendBaseUrl = (): string => {
+  const configured =
+    process.env.NOA_FRONTEND_URL ||
+    process.env.FRONTEND_URL ||
+    process.env.LOCALHOST_FRONTEND_URL ||
+    'https://factor.whizunikhub.com';
+
+  return configured.trim().replace(/\/+$/, '');
+};
+
 const buildEntityAddress = (entity: any): string[] => {
   if (!entity) return [];
 
@@ -167,8 +177,8 @@ router.post('/send', async (req, res) => {
 
     // Create email content
     const referenceNumber = `REF-${transaction.transactionId}-${Date.now().toString().slice(-6)}`;
-    const localhostFrontendUrl = process.env.LOCALHOST_FRONTEND_URL || 'http://localhost:5173';
-    const noaUrl = `${localhostFrontendUrl}/noa/${token}`;
+    const noaFrontendBaseUrl = getNoaFrontendBaseUrl();
+    const noaUrl = `${noaFrontendBaseUrl}/noa/${token}`;
     
     const emailSubject = `Invoice Verification Required – ${referenceNumber}`;
     const emailBody = `
