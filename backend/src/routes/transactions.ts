@@ -13,8 +13,6 @@ import {
 } from '../data/dynamoRepository';
 import { isDynamoConfigured } from '../data/dynamoClient';
 
-// Mock data as fallback
-import { mockTransactions } from '../../mockData';
 
 const router = express.Router();
 const upload = multer({
@@ -60,11 +58,11 @@ const getPairUtilizedAmount = async (buyerEntity: any, supplierEntity: any): Pro
 router.get('/', async (req, res) => {
   try {
     if (!isDynamoConfigured()) {
-      console.warn('DynamoDB not configured, using mock data');
+      console.warn('DynamoDB not configured, returning empty transactions list');
       return res.json({
         success: true,
-        message: 'Transactions retrieved successfully (mock data)',
-        data: mockTransactions
+        message: 'Transactions retrieved successfully',
+        data: []
       });
     }
 
@@ -76,11 +74,10 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Get transactions error:', error);
-    // Fallback to mock data on error
     res.json({
       success: true,
-      message: 'Transactions retrieved successfully (fallback to mock data)',
-      data: mockTransactions
+      message: 'Transactions retrieved successfully',
+      data: []
     });
   }
 });

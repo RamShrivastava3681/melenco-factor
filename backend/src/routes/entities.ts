@@ -13,8 +13,6 @@ import {
 } from '../data/dynamoRepository';
 import { isDynamoConfigured } from '../data/dynamoClient';
 
-// Mock data as fallback
-import { mockBuyers, mockSuppliers } from '../../mockData';
 
 const router = express.Router();
 const upload = multer({
@@ -22,18 +20,15 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 }
 });
 
-// Combine mock buyers and suppliers as entities
-const mockEntities = [...mockBuyers, ...mockSuppliers];
-
 // Get all entities
 router.get('/', async (req, res) => {
   try {
     if (!isDynamoConfigured()) {
-      console.warn('DynamoDB not configured, using mock data');
+      console.warn('DynamoDB not configured, returning empty entities list');
       return res.json({
         success: true,
-        message: 'Entities retrieved successfully (mock data)',
-        data: mockEntities
+        message: 'Entities retrieved successfully',
+        data: []
       });
     }
 
@@ -45,11 +40,10 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Get entities error:', error);
-    // Fallback to mock data on error
     res.json({
       success: true,
-      message: 'Entities retrieved successfully (fallback to mock data)',
-      data: mockEntities
+      message: 'Entities retrieved successfully',
+      data: []
     });
   }
 });
@@ -86,11 +80,11 @@ router.get('/:id', async (req, res) => {
 router.get('/buyers/list', async (req, res) => {
   try {
     if (!isDynamoConfigured()) {
-      console.warn('DynamoDB not configured, using mock buyer data');
+      console.warn('DynamoDB not configured, returning empty buyers list');
       return res.json({
         success: true,
-        message: 'Buyers retrieved successfully (mock data)',
-        data: mockBuyers
+        message: 'Buyers retrieved successfully',
+        data: []
       });
     }
 
@@ -98,11 +92,11 @@ router.get('/buyers/list', async (req, res) => {
     
     // If no buyers found in database, fallback to mock data
     if (!buyers || buyers.length === 0) {
-      console.warn('No buyers found in database, using mock data');
+      console.warn('No buyers found in database');
       return res.json({
         success: true,
-        message: 'Buyers retrieved successfully (fallback to mock data)',
-        data: mockBuyers
+        message: 'Buyers retrieved successfully',
+        data: []
       });
     }
     
@@ -113,11 +107,10 @@ router.get('/buyers/list', async (req, res) => {
     });
   } catch (error) {
     console.error('Get buyers error:', error);
-    // Fallback to mock data on error
     res.json({
       success: true,
-      message: 'Buyers retrieved successfully (fallback to mock data)',
-      data: mockBuyers
+      message: 'Buyers retrieved successfully',
+      data: []
     });
   }
 });
@@ -126,11 +119,11 @@ router.get('/buyers/list', async (req, res) => {
 router.get('/suppliers/list', async (req, res) => {
   try {
     if (!isDynamoConfigured()) {
-      console.warn('DynamoDB not configured, using mock supplier data');
+      console.warn('DynamoDB not configured, returning empty suppliers list');
       return res.json({
         success: true,
-        message: 'Suppliers retrieved successfully (mock data)',
-        data: mockSuppliers
+        message: 'Suppliers retrieved successfully',
+        data: []
       });
     }
 
@@ -138,11 +131,11 @@ router.get('/suppliers/list', async (req, res) => {
     
     // If no suppliers found in database, fallback to mock data
     if (!suppliers || suppliers.length === 0) {
-      console.warn('No suppliers found in database, using mock data');
+      console.warn('No suppliers found in database');
       return res.json({
         success: true,
-        message: 'Suppliers retrieved successfully (fallback to mock data)',
-        data: mockSuppliers
+        message: 'Suppliers retrieved successfully',
+        data: []
       });
     }
     
@@ -153,11 +146,10 @@ router.get('/suppliers/list', async (req, res) => {
     });
   } catch (error) {
     console.error('Get suppliers error:', error);
-    // Fallback to mock data on error
     res.json({
       success: true,
-      message: 'Suppliers retrieved successfully (fallback to mock data)',
-      data: mockSuppliers
+      message: 'Suppliers retrieved successfully',
+      data: []
     });
   }
 });

@@ -14,8 +14,9 @@ import {
   Upload,
   Download,
   Trash
-} from 'lucide-react';import { mockBuyers, mockSuppliers } from '@/data/demoData';
-import { createApiUrl, getApiHeaders } from '@/config/api';import { Button } from '@/components/ui/button';
+} from 'lucide-react';
+import { createApiUrl, getApiHeaders } from '@/config/api';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AddSupplierDialog } from '@/components/forms/AddSupplierDialog';
@@ -106,23 +107,6 @@ export default function Entities() {
         console.log('✅ Backend entities received:', backendEntities.length);
         console.log('📄 Backend entities:', backendEntities);
         
-        // Combine backend entities with mock data for demonstration
-        // In production, you would use only backend entities
-        const buyersWithType = mockBuyers.map(buyer => ({
-          ...buyer,
-          type: 'buyer',
-          name: buyer.legalName,
-          entityId: buyer.id
-        }));
-        
-        const suppliersWithType = mockSuppliers.map(supplier => ({
-          ...supplier,
-          type: 'supplier',
-          name: supplier.legalName,
-          entityId: supplier.id
-        }));
-        
-        // Add backend entities (these are the new ones created via API)
         // Normalize backend entities to have consistent ID field
         const normalizedBackendEntities = backendEntities.map(entity => ({
           ...entity,
@@ -130,7 +114,7 @@ export default function Entities() {
           entityId: entity.entityId || entity.id || entity._id // Keep entityId for reference
         }));
         
-        const allEntities = [...buyersWithType, ...suppliersWithType, ...normalizedBackendEntities];
+        const allEntities = normalizedBackendEntities;
         console.log('🔗 Total entities after combining:', allEntities.length);
         console.log('🔍 First backend entity ID mapping:', normalizedBackendEntities[0]?.id, normalizedBackendEntities[0]?._id);
         setEntities(allEntities);
@@ -150,85 +134,35 @@ export default function Entities() {
         const backendBuyers = backendEntities.filter(e => e.type === 'buyer').length;
         
         setEntityStats({
-          totalSuppliers: mockSuppliers.length + backendSuppliers,
-          totalBuyers: mockBuyers.length + backendBuyers,
+          totalSuppliers: backendSuppliers,
+          totalBuyers: backendBuyers,
           totalCreditLimit,
-          averageRiskScore: Math.round(totalRiskScore / allEntities.length),
+          averageRiskScore: allEntities.length ? Math.round(totalRiskScore / allEntities.length) : 0,
           activeEntities: allEntities.filter(e => e.status === 'active' || e.status === 'approved').length,
           pendingApproval: allEntities.filter(e => e.status === 'pending' || e.status === 'pending_review').length
         });
       } else {
         console.error('❌ Failed to fetch entities from backend, status:', response.status);
-        // Fallback to mock data only
-        const buyersWithType = mockBuyers.map(buyer => ({
-          ...buyer,
-          type: 'buyer',
-          name: buyer.legalName,
-          entityId: buyer.id
-        }));
-        
-        const suppliersWithType = mockSuppliers.map(supplier => ({
-          ...supplier,
-          type: 'supplier',
-          name: supplier.legalName,
-          entityId: supplier.id
-        }));
-        
-        const allEntities = [...buyersWithType, ...suppliersWithType];
-        setEntities(allEntities);
-        
-        // Calculate stats with mock data only (simple calculation)
-        const totalCreditLimit = mockSuppliers.reduce((sum, supplier) => 
-          sum + (supplier.totalLimitSanctioned || supplier.creditLimit || 0), 0
-        ) + mockBuyers.reduce((sum, buyer) => 
-          sum + (buyer.creditLimit || buyer.exposureLimit || 0), 0
-        );
-        const totalRiskScore = allEntities.reduce((sum, entity) => sum + (entity.riskScore || entity.supplierRating === 'A+' ? 95 : entity.supplierRating === 'A' ? 90 : entity.supplierRating === 'A-' ? 85 : entity.supplierRating === 'B+' ? 80 : 75), 0);
-        
+        setEntities([]);
         setEntityStats({
-          totalSuppliers: mockSuppliers.length,
-          totalBuyers: mockBuyers.length,
-          totalCreditLimit,
-          averageRiskScore: Math.round(totalRiskScore / allEntities.length),
-          activeEntities: allEntities.filter(e => e.status === 'active' || e.status === 'approved').length,
-          pendingApproval: allEntities.filter(e => e.status === 'pending' || e.status === 'pending_review').length
+          totalSuppliers: 0,
+          totalBuyers: 0,
+          totalCreditLimit: 0,
+          averageRiskScore: 0,
+          activeEntities: 0,
+          pendingApproval: 0
         });
       }
     } catch (error) {
       console.error('🚨 Network error fetching entities:', error);
-      // Fallback to mock data only in case of network error
-      const buyersWithType = mockBuyers.map(buyer => ({
-        ...buyer,
-        type: 'buyer',
-        name: buyer.legalName,
-        entityId: buyer.id
-      }));
-      
-      const suppliersWithType = mockSuppliers.map(supplier => ({
-        ...supplier,
-        type: 'supplier',
-        name: supplier.legalName,
-        entityId: supplier.id
-      }));
-      
-      const allEntities = [...buyersWithType, ...suppliersWithType];
-      setEntities(allEntities);
-      
-      // Calculate stats with mock data only (simple calculation)
-      const totalCreditLimit = mockSuppliers.reduce((sum, supplier) => 
-        sum + (supplier.totalLimitSanctioned || supplier.creditLimit || 0), 0
-      ) + mockBuyers.reduce((sum, buyer) => 
-        sum + (buyer.creditLimit || buyer.exposureLimit || 0), 0
-      );
-      const totalRiskScore = allEntities.reduce((sum, entity) => sum + (entity.riskScore || entity.supplierRating === 'A+' ? 95 : entity.supplierRating === 'A' ? 90 : entity.supplierRating === 'A-' ? 85 : entity.supplierRating === 'B+' ? 80 : 75), 0);
-      
+      setEntities([]);
       setEntityStats({
-        totalSuppliers: mockSuppliers.length,
-        totalBuyers: mockBuyers.length,
-        totalCreditLimit,
-        averageRiskScore: Math.round(totalRiskScore / allEntities.length),
-        activeEntities: allEntities.filter(e => e.status === 'active' || e.status === 'approved').length,
-        pendingApproval: allEntities.filter(e => e.status === 'pending' || e.status === 'pending_review').length
+        totalSuppliers: 0,
+        totalBuyers: 0,
+        totalCreditLimit: 0,
+        averageRiskScore: 0,
+        activeEntities: 0,
+        pendingApproval: 0
       });
     }
     

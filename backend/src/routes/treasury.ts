@@ -13,7 +13,6 @@ import {
 } from '../data/dynamoRepository';
 import { broadcastNotification } from '../index';
 import { isDynamoConfigured } from '../data/dynamoClient';
-import { mockTransactions } from '../../mockData';
 
 const router = express.Router();
 
@@ -539,40 +538,14 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
 router.get('/closed-invoices', async (req, res) => {
   try {
     if (!isDynamoConfigured()) {
-      const closedInvoices = mockTransactions
-        .filter((transaction: any) => ['settled', 'completed', 'closed'].includes(transaction.status))
-        .map((transaction: any) => ({
-          id: transaction.transactionId || transaction.id,
-          invoiceNumber: transaction.invoiceNumber,
-          invoiceDate: transaction.invoiceDate,
-          dueDate: transaction.dueDate,
-          supplierName: transaction.supplierName,
-          buyerName: transaction.buyerName,
-          currency: transaction.currency || 'USD',
-          invoiceAmount: transaction.invoiceValue || transaction.invoiceAmount || 0,
-          advanceAmount: transaction.advanceAmount || 0,
-          feeAmount: transaction.feeAmount || 0,
-          paidAmount: transaction.paidAmount || 0,
-          reserves: transaction.reserveAmount || 0,
-          lateFees: 0,
-          status: transaction.status,
-          settledAt: transaction.settledAt,
-          createdAt: transaction.createdAt,
-          updatedAt: transaction.updatedAt,
-          paymentHistory: transaction.paymentHistory || [],
-          agingDaysAtClosure: transaction.settledAt && transaction.dueDate
-            ? Math.max(0, Math.floor((new Date(transaction.settledAt).getTime() - new Date(transaction.dueDate).getTime()) / (1000 * 60 * 60 * 24)))
-            : 0
-        }));
-
       return res.json({
         success: true,
-        data: closedInvoices,
+        data: [],
         summary: {
-          total: closedInvoices.length,
-          totalAmount: closedInvoices.reduce((sum: number, invoice: any) => sum + (invoice.invoiceAmount || 0), 0),
-          totalPaidAmount: closedInvoices.reduce((sum: number, invoice: any) => sum + (invoice.paidAmount || 0), 0),
-          totalLateFees: closedInvoices.reduce((sum: number, invoice: any) => sum + (invoice.lateFees || 0), 0)
+          total: 0,
+          totalAmount: 0,
+          totalPaidAmount: 0,
+          totalLateFees: 0
         }
       });
     }

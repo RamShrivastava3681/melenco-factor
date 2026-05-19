@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AddTransactionDialog } from '@/components/forms/AddTransactionDialog';
-import { mockTransactions } from '@/data/demoData';
 import { createApiUrl, getApiHeaders } from '@/config/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
@@ -93,35 +92,11 @@ export default function Transactions() {
         console.log('Fetched transactions from API:', transformedTransactions);
       } else {
         console.error('Failed to fetch transactions from API');
-        // Fallback to mock data if API fails
-        const transformedTransactions = mockTransactions.map(txn => ({
-          ...txn,
-          invoiceNumber: txn.id,
-          transactionId: txn.id,
-          supplierName: txn.supplierName,
-          buyerName: txn.buyerName,
-          status: txn.status === 'active' ? 'approved' : 
-                  txn.status === 'completed' ? 'settled' :
-                  txn.status === 'pending_approval' ? 'pending' :
-                  txn.status === 'overdue' ? 'rejected' : txn.status
-        }));
-        setTransactions(transformedTransactions);
+        setTransactions([]);
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      // Fallback to mock data on error
-      const transformedTransactions = mockTransactions.map(txn => ({
-        ...txn,
-        invoiceNumber: txn.id,
-        transactionId: txn.id,
-        supplierName: txn.supplierName,
-        buyerName: txn.buyerName,
-        status: txn.status === 'active' ? 'approved' : 
-                txn.status === 'completed' ? 'settled' :
-                txn.status === 'pending_approval' ? 'pending' :
-                txn.status === 'overdue' ? 'rejected' : txn.status
-      }));
-      setTransactions(transformedTransactions);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
