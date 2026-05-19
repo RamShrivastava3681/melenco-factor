@@ -8,6 +8,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./pages/Login";
 import { AppLayout } from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
+import FrameworkAgreement from "./pages/FrameworkAgreement";
 import Entities from "./pages/Entities";
 import Transactions from "./pages/Transactions";
 import FeeLimits from "./pages/FeeLimits";
@@ -17,6 +18,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { NOAPage } from "./pages/NOAPage";
+import FrameworkAgreementSignPage from "./pages/FrameworkAgreementSignPage";
 
 const queryClient = new QueryClient();
 
@@ -31,11 +33,13 @@ const App = () => (
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/noa/:token" element={<NOAPage />} />
+            <Route path="/framework-agreement/sign/:token" element={<FrameworkAgreementSignPage />} />
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/framework-agreement" element={<FrameworkAgreement />} />
               <Route path="/entities" element={<Entities />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/fee-limits" element={<FeeLimits />} />

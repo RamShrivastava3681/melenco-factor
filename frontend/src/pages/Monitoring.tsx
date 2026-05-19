@@ -155,6 +155,30 @@ interface SignedNOARecord {
   };
 }
 
+interface SignedFrameworkRecord {
+  _id: string;
+  agreementId: string;
+  sellerName: string;
+  buyerName: string;
+  recipientEmail?: string;
+  acknowledgedAt?: string;
+  updatedAt?: string;
+  signatoryData?: {
+    fullName?: string;
+    position?: string;
+    ipAddress?: string;
+    userAgent?: string;
+    signatureDataUrl?: string;
+    photoDataUrl?: string;
+    location?: {
+      city?: string;
+      country?: string;
+      latitude?: number;
+      longitude?: number;
+    };
+  };
+}
+
 interface FeesSummary {
   totalCollected: number;
   feesThisMonth: number;
@@ -236,6 +260,8 @@ export default function Monitoring() {
   const [feeTransactions, setFeeTransactions] = useState<FeeTransactionRow[]>([]);
   const [signedNoasLoading, setSignedNoasLoading] = useState(false);
   const [signedNoas, setSignedNoas] = useState<SignedNOARecord[]>([]);
+  const [signedFrameworksLoading, setSignedFrameworksLoading] = useState(false);
+  const [signedFrameworks, setSignedFrameworks] = useState<SignedFrameworkRecord[]>([]);
   const [activeTab, setActiveTab] = useState('open-invoices');
   
   // Dialog states
@@ -261,6 +287,8 @@ export default function Monitoring() {
       loadFeesData();
     } else if (activeTab === 'noa-signed') {
       loadSignedNoas();
+    } else if (activeTab === 'framework-signed') {
+      loadSignedFrameworks();
     }
   }, [activeTab]);
 
@@ -342,6 +370,27 @@ export default function Monitoring() {
       setSignedNoas([]);
     } finally {
       setSignedNoasLoading(false);
+    }
+  };
+
+  const loadSignedFrameworks = async () => {
+    setSignedFrameworksLoading(true);
+    try {
+      const response = await fetch(createApiUrl('/documents/framework-agreement/signed'), {
+        headers: getApiHeaders()
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setSignedFrameworks(result.data || []);
+      } else {
+        setSignedFrameworks([]);
+      }
+    } catch (error) {
+      console.error('Failed to load signed framework agreements:', error);
+      setSignedFrameworks([]);
+    } finally {
+      setSignedFrameworksLoading(false);
     }
   };
 
@@ -817,6 +866,7 @@ export default function Monitoring() {
           <TabsTrigger value="due-invoices">Due Invoices</TabsTrigger>
           <TabsTrigger value="closed-invoices">Closed Invoices</TabsTrigger>
           <TabsTrigger value="noa-signed">NOA Signed</TabsTrigger>
+          <TabsTrigger value="framework-signed">Framework Signed</TabsTrigger>
           <TabsTrigger value="fees">Fees</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
         </TabsList>
@@ -941,6 +991,139 @@ export default function Monitoring() {
                             variant="outline"
                             size="sm"
                             onClick={() => window.open(createApiUrl(`/noa/${record.noaId}/pdf`), '_blank')}
+                          >
+                            Download PDF
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="framework-signed" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Signed Frameworks</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">{signedFrameworks.length}</div>
+                <p className="text-xs text-muted-foreground">Total acknowledged records</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">With Selfie</CardTitle>
+                <Eye className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {signedFrameworks.filter((item) => !!item.signatoryData?.photoDataUrl).length}
+                </div>
+                <p className="text-xs text-muted-foreground">Photo captured records</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">With Location</CardTitle>
+                <Activity className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">
+                  {signedFrameworks.filter((item) => !!item.signatoryData?.location?.city && !!item.signatoryData?.location?.country).length}
+                </div>
+                <p className="text-xs text-muted-foreground">City/Country captured</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Signed Framework Agreement Records</CardTitle>
+              <CardDescription>All acknowledged framework agreements with signatory, selfie, signature, and location details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Agreement</TableHead>
+                    <TableHead>Buyer / Seller</TableHead>
+                    <TableHead>Signatory</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Signed At</TableHead>
+                    <TableHead>Proof</TableHead>
+                    <TableHead>Document</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {signedFrameworksLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        Loading signed framework agreements...
+                      </TableCell>
+                    </TableRow>
+                  ) : signedFrameworks.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        No signed framework agreements found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    signedFrameworks.map((record) => (
+                      <TableRow key={record._id || record.agreementId}>
+                        <TableCell>
+                          <div className="font-medium">{record.agreementId}</div>
+                          <div className="text-xs text-muted-foreground">{record.recipientEmail || '-'}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div>{record.buyerName}</div>
+                          <div className="text-xs text-muted-foreground">Seller: {record.sellerName}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div>{record.signatoryData?.fullName || '-'}</div>
+                          <div className="text-xs text-muted-foreground">{record.signatoryData?.position || '-'}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div>{record.signatoryData?.location?.city || '-'}</div>
+                          <div className="text-xs text-muted-foreground">{record.signatoryData?.location?.country || '-'}</div>
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(record.acknowledgedAt || record.updatedAt || '')}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {record.signatoryData?.photoDataUrl ? (
+                              <img
+                                src={record.signatoryData.photoDataUrl}
+                                alt="Selfie"
+                                className="h-10 w-10 rounded-md object-cover border"
+                              />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No selfie</span>
+                            )}
+                            {record.signatoryData?.signatureDataUrl ? (
+                              <img
+                                src={record.signatoryData.signatureDataUrl}
+                                alt="Signature"
+                                className="h-10 w-16 rounded-md object-contain border bg-white"
+                              />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No signature</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(createApiUrl(`/documents/framework-agreement/${record.agreementId}/pdf`), '_blank')}
                           >
                             Download PDF
                           </Button>
@@ -1431,6 +1614,7 @@ export default function Monitoring() {
                       <TableHead>Fee deducted</TableHead>
                       <TableHead>Invoice Age</TableHead>
                       <TableHead>Amount Received</TableHead>
+                      <TableHead>Outstanding Amount</TableHead>
                       <TableHead>Date Received</TableHead>
                       <TableHead>Late Days</TableHead>
                       <TableHead>Late Fees</TableHead>
@@ -1442,7 +1626,7 @@ export default function Monitoring() {
                   <TableBody>
                     {openInvoices.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={19} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={20} className="text-center py-8 text-muted-foreground">
                           No open invoices found
                         </TableCell>
                       </TableRow>
@@ -1496,6 +1680,11 @@ export default function Monitoring() {
                           <TableCell>
                             <div className="text-blue-600 font-medium">
                               ${(invoice.paidAmount || 0).toLocaleString()}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-red-600 font-bold">
+                              ${(invoice.totalAmountDue || 0).toLocaleString()}
                             </div>
                           </TableCell>
                           <TableCell>

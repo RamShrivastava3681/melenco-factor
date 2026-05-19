@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Framework Agreement | Whizunik Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a1f2c;
+            --accent: #d4af37; /* Gold accent */
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --bg-body: #f8f9fa;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Layout Structure */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: var(--primary);
+            color: white;
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            z-index: 100;
+        }
+
+        .sidebar h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+            padding-left: 0.75rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 4rem 10%;
+            max-width: 1400px;
+        }
+
+        .document-card {
+            background: var(--bg-card);
+            padding: 5rem 6rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        /* Header Styling */
+        .doc-header {
+            text-align: center;
+            margin-bottom: 5rem;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 2rem;
+        }
+
+        .doc-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .doc-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Typography & Structure */
+        section {
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            text-align: justify;
+        }
+
+        /* Clause List Styling */
+        .clause {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .clause-number {
+            font-weight: 700;
+            color: var(--primary);
+            margin-right: 0.5rem;
+        }
+
+        .sub-clause {
+            margin-left: 2rem;
+            margin-top: 0.75rem;
+        }
+
+        /* Definitions Table */
+        .definitions-list {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .term {
+            font-weight: 600;
+            color: var(--primary);
+            padding: 1rem;
+            background: #fcfcfc;
+            border-left: 2px solid var(--accent);
+        }
+
+        .definition {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Schedules */
+        .schedule-box {
+            background: #fafafa;
+            border: 1px dashed var(--border-color);
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+
+        .signature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin-top: 5rem;
+        }
+
+        .signature-line {
+            border-top: 1px solid var(--primary);
+            margin-top: 4rem;
+            padding-top: 1rem;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar { width: 0; display: none; }
+            .main-content { margin-left: 0; padding: 2rem; }
+            .document-card { padding: 3rem 2rem; }
+            .definitions-list { grid-template-columns: 1fr; }
+        }
+
+        /* Utilities */
+        .highlight {
+            background: rgba(212, 175, 55, 0.1);
+            padding: 0 0.2rem;
+            border-radius: 2px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <h2>Whizunik</h2>
+            <ul class="nav-list">
+                <li class="nav-item"><a href="#definitions" class="nav-link">1. Definitions</a></li>
+                <li class="nav-item"><a href="#offer" class="nav-link">2. Offer</a></li>
+                <li class="nav-item"><a href="#sale-purchase" class="nav-link">3. Sale & Purchase</a></li>
+                <li class="nav-item"><a href="#payment" class="nav-link">4. Payment Terms</a></li>
+                <li class="nav-item"><a href="#assurances" class="nav-link">5. Further Assurances</a></li>
+                <li class="nav-item"><a href="#warranties" class="nav-link">6. Reps & Warranties</a></li>
+                <li class="nav-item"><a href="#covenants" class="nav-link">7. Seller Covenants</a></li>
+                <li class="nav-item"><a href="#indemnities" class="nav-link">11. Indemnities</a></li>
+                <li class="nav-item"><a href="#confidentiality" class="nav-link">13. Confidentiality</a></li>
+                <li class="nav-item"><a href="#termination" class="nav-link">14. Termination</a></li>
+                <li class="nav-item"><a href="#governing-law" class="nav-link">17. Governing Law</a></li>
+                <li class="nav-item"><a href="#schedules" class="nav-link">Schedules</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="document-card">
+                <header class="doc-header">
+                    <div class="badge">Institutional Framework</div>
+                    <h1>Framework Agreement</h1>
+                    <p style="text-align: center; font-style: italic; color: var(--text-muted);">For the Purchase of Accounts Receivable</p>
+                    <div class="doc-meta">
+                        <span>Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0</span>
+                        <span>Effective Date: 18 July 2024</span>
+                    </div>
+                </header>
+
+                <!-- Section 1: Definitions -->
+                <section id="definitions">
+                    <h2>1. Definitions and Interpretation</h2>
+                    <p>1.1 In this Agreement, the following terms shall have the following meanings:</p>
+                    
+                    <div class="definitions-list">
+                        <div class="term">Account Receivable</div>
+                        <div class="definition">Means the right to receive any and all present and future payments of money due and payable, whether due now or payable in the future (including any entitlement to late payment interest whether by contract or implied by law) as a result of an Underlying Relationship.</div>
+
+                        <div class="term">Advance Rate</div>
+                        <div class="definition">Means a percentage of the face value of the Account Receivable (as may be adjusted by MODIFI from time to time).</div>
+
+                        <div class="term">Adverse Claim</div>
+                        <div class="definition">Means any Security Interest, netting, set-off, claim, defence or counterclaim, prohibition on assignment, negative pledge, including claims related to shipment, delivery, damage, defect, or performance.</div>
+
+                        <div class="term">Applicable Law</div>
+                        <div class="definition">Means all existing and future laws, rules, regulations, statutes, treaties, codes, ordinances, Permits, certificates, orders and licenses of any governmental authority.</div>
+
+                        <div class="term">Business Day</div>
+                        <div class="definition">Means a day other than a Saturday, Sunday, or public holiday in Amsterdam on which the banks in Amsterdam are open for general business.</div>
+
+                        <div class="term">Deferred Purchase Price</div>
+                        <div class="definition">Means with respect to an Account Receivable the higher of (i) zero; and (ii) the amount actually Collected less the Initial Purchase Price, Fees, and any amounts payable by the Seller to MODIFI.</div>
+
+                        <div class="term">Event of Insolvency</div>
+                        <div class="definition">
+                            Deemed to occur if a Person:
+                            <ul style="margin-left: 1rem; margin-top: 0.5rem; font-size: 0.85rem;">
+                                <li>Stops or suspends payment of its debts.</li>
+                                <li>Begins negotiations for rescheduling debts.</li>
+                                <li>Files a petition for bankruptcy or winding-up.</li>
+                                <li>Has a receiver or manager appointed over its assets.</li>
+                            </ul>
+                        </div>
+
+                        <div class="term">Political Risk</div>
+                        <div class="definition">Includes non-payment by a Foreign Public Buyer, war, civil war, currency shortages, or government decrees preventing payment.</div>
+                    </div>
+
+                    <div class="clause" style="margin-top: 3rem;">
+                        <span class="clause-number">1.2</span> <strong>Interpretation</strong>
+                        <div class="sub-clause">
+                            <p>1.2.1 Words and phrases defined in the Companies Act 2006 shall have an equivalent meaning.</p>
+                            <p>1.2.6 Any phrase introduced by the words “including” or “in particular” shall be construed as illustrative only.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 2: Offer -->
+                <section id="offer">
+                    <h2>2. Offer</h2>
+                    <div class="clause">
+                        <span class="clause-number">2.1</span>
+                        The Seller may provide information regarding Accounts Receivable via the Platform. MODIFI will display the applicable Advance Rate and Fees.
+                    </div>
+                    <div class="clause">
+                        <span class="clause-number">2.2</span>
+                        Posting an Invoice indicates acceptance of the Fees and purchase conditions.
+                    </div>
+                </section>
+
+                <!-- Section 3: Sale and Purchase -->
+                <section id="sale-purchase">
+                    <h2>3. Sale and Purchase of Accounts Receivable</h2>
+                    <div class="clause">
+                        <span class="clause-number">3.1</span>
+                        MODIFI may, but shall not be obliged to, accept an offer made by the Seller in accordance with Clause 2 (Offer) by indicating its acceptance via the Platform.
+                    </div>
+                    <div class="clause">
+                        <span class="clause-number">3.2</span>
+                        On notification of acceptance by MODIFI, Seller shall have sold and assigned absolutely all of its present and future right, title and interest in, to and under the relevant Account Receivable and all Related Rights in relation thereto to MODIFI.
+                    </div>
+                    <div class="clause">
+                        <span class="clause-number">3.3</span>
+                        On purchase of an Account Receivable MODIFI may notify the relevant Buyer of such purchase either directly or via the Platform and provide account details for payment.
+                    </div>
+                    <div class="clause">
+                        <span class="clause-number">3.5</span>
+                        If a State of Default occurs prior to MODIFI making payment of the Initial Purchase Price, MODIFI shall be released from its obligation to pay the Initial Purchase Price and shall instead only pay the Deferred Purchase Price.
+                    </div>
+                </section>
+
+                <!-- Section 4: Payment -->
+                <section id="payment">
+                    <h2>4. Payment of Purchase Price</h2>
+                    <div class="clause">
+                        <span class="clause-number">4.2</span>
+                        MODIFI shall pay the Initial Purchase Price on the IPP Payment Date (within 3 Business Days of acceptance).
+                    </div>
+                    <div class="clause">
+                        <span class="clause-number">4.3</span>
+                        Deferred Purchase Price is paid within 2 Business Days of the Account being Collected.
+                    </div>
+                </section>
+
+                <!-- Section 6: Representations -->
+                <section id="warranties">
+                    <h2>6. Seller Representations and Warranties</h2>
+                    <p>The Seller represents and warrants to MODIFI on each day that:</p>
+                    <div class="clause">
+                        <span class="clause-number">6.1.5</span> 
+                        Each Account Receivable:
+                        <div class="sub-clause">
+                            <p>6.1.5.1 Is a legal, valid, and enforceable obligation of the Buyer.</p>
+                            <p>6.1.5.2 Is solely owned by the Seller.</p>
+                            <p>6.1.5.3 Is free from all Adverse Claims and Security Interests.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 11: Indemnities -->
+                <section id="indemnities">
+                    <h2>11. Indemnities</h2>
+                    <div class="clause">
+                        <span class="clause-number">11.1</span>
+                        Seller shall indemnify MODIFI against any losses arising from breach of agreement, tax liabilities, or disputes related to Accounts Receivable.
+                    </div>
+                    <div class="clause">
+                        <span class="clause-number">11.3</span>
+                        Late Fees of <span class="highlight">1.5% per month</span> apply if Collected after the Late Fee Start Date.
+                    </div>
+                </section>
+
+                <!-- Section 17: Governing Law -->
+                <section id="governing-law">
+                    <h2>17. Governing Law and Jurisdiction</h2>
+                    <div class="clause">
+                        <span class="clause-number">17.1</span>
+                        This Agreement shall be governed by <span class="highlight">English Law</span>.
+                    </div>
+                    <div class="clause">
+                        <span class="clause-number">17.2</span>
+                        Parties submit to the exclusive jurisdiction of the English courts.
+                    </div>
+                </section>
+
+                <!-- Schedules -->
+                <section id="schedules">
+                    <h2>Schedules</h2>
+                    <div class="schedule-box">
+                        <h3>Schedule 1: Contact & Bank Details</h3>
+                        <p><strong>Seller:</strong> LAJ EXPORTS LIMITED</p>
+                        <p><strong>Primary Contact:</strong> Naresh Aneja (naresh@lajexports.com)</p>
+                        <p><strong>Bank Details:</strong> YES Bank, Account No: 001484600002512</p>
+                    </div>
+                </section>
+
+                <!-- Signatures -->
+                <div class="signature-grid">
+                    <div>
+                        <p>Signed for and on behalf of</p>
+                        <p><strong>MODIFI B.V.</strong></p>
+                        <div class="signature-line">Authorised Signatory</div>
+                    </div>
+                    <div>
+                        <p>Signed for and on behalf of</p>
+                        <p><strong>LAJ EXPORTS LIMITED</strong></p>
+                        <div class="signature-line">Authorised Signatory</div>
+                        <p style="font-size: 0.8rem; margin-top: 1rem;">Name: Naresh Aneja<br>Date: 18 July 2024</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

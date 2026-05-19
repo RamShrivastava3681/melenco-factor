@@ -318,8 +318,8 @@ export default function Transactions() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredTransactions.map((transaction) => (
-                  <TableRow key={transaction.id} className="border-border hover:bg-muted/30">
+                filteredTransactions.map((transaction, index) => (
+                  <TableRow key={transaction.transactionId || transaction.id || index} className="border-border hover:bg-muted/30">
                     <TableCell>
                       <div className="space-y-1">
                         <p className="font-medium text-financial-navy">{transaction.transactionId}</p>

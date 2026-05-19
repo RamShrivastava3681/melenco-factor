@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 const routeNames: Record<string, string> = {
   '/': 'Dashboard',
+  '/framework-agreement': 'Framework Agreement',
   '/entities': 'Suppliers & Buyers',
   '/transactions': 'Transactions',
   '/fee-limits': 'Fee & Limits',

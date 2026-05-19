@@ -7,7 +7,7 @@ import {
   TransactionStatus,
   ApiResponse
 } from '../models/index';
-import { TransactionModel, EntityModel } from '../models/schemas';
+import { getEntityById, listTransactions } from '../data/dynamoRepository';
 
 const router = express.Router();
 
@@ -815,7 +815,7 @@ router.post('/alerts/bulk-resolve', (req, res) => {
 // Get collected fees summary and detailed breakdown
 router.get('/fees/summary', async (req, res) => {
   try {
-    const transactions = await TransactionModel.find({}).lean();
+    const transactions = await listTransactions();
     const now = new Date();
 
     const feeRows = transactions
@@ -961,7 +961,7 @@ router.post('/send-to-treasury', async (req, res) => {
     }
     
     // Get actual supplier bank details from database
-    const supplier = await EntityModel.findOne({ entityId: supplierId, type: 'supplier' });
+    const supplier = await getEntityById(supplierId);
     
     const supplierBankDetails = supplier ? {
       beneficiary: supplier.name || supplier.name,

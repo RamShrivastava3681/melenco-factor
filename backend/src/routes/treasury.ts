@@ -1,43 +1,62 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import { TransactionModel, EntityModel, PayoutRecordModel } from '../models/schemas';
+import {
+  createPayoutRecord,
+  deleteTransaction,
+  getEntityById,
+  getPayoutRecordById,
+  getTransactionById,
+  listEntities,
+  listPayoutRecords,
+  listTransactions,
+  updateTransaction,
+  updateTransactionsByIds
+} from '../data/dynamoRepository';
 import { broadcastNotification } from '../index';
+import { isDynamoConfigured } from '../data/dynamoClient';
 import { mockTransactions } from '../../mockData';
 
 const router = express.Router();
 
+const findEntityByAnyId = async (id: string) => {
+  return getEntityById(String(id || ''));
+};
+
+const normalizeBankDetails = (bankDetails: any, fallbackName: string, fallbackCurrency: string = 'USD') => ({
+  beneficiary: String(bankDetails?.beneficiary || fallbackName || 'Unknown Beneficiary'),
+  bank: String(bankDetails?.bank || 'Bank details pending'),
+  branch: String(bankDetails?.branch || 'Branch details pending'),
+  accountNumber: String(bankDetails?.accountNumber || 'Account pending'),
+  ifscCode: String(bankDetails?.ifscCode || ''),
+  swiftCode: bankDetails?.swiftCode ? String(bankDetails.swiftCode) : undefined,
+  currency: String(bankDetails?.currency || fallbackCurrency || 'USD')
+});
+
 // Get treasury metrics with basic MongoDB queries
 router.get('/metrics', async (req, res) => {
   try {
-    // Calculate actual metrics from MongoDB
-    const totalTransactions = await TransactionModel.countDocuments();
-    const totalFees = await TransactionModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$feeAmount' } } }
-    ]);
-    const totalAdvances = await TransactionModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$advanceAmount' } } }
-    ]);
-    const totalReserves = await TransactionModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$reserveAmount' } } }
-    ]);
+    const transactions = await listTransactions();
+    const totalTransactions = transactions.length;
+    const totalFees = transactions.reduce((sum, tx) => sum + (tx.feeAmount || 0), 0);
+    const totalAdvances = transactions.reduce((sum, tx) => sum + (tx.advanceAmount || 0), 0);
+    const totalReserves = transactions.reduce((sum, tx) => sum + (tx.reserveAmount || 0), 0);
 
     res.json({
       success: true,
       data: {
         totalRevenueGenerated: { 
-          value: totalFees[0]?.total || 0, 
+          value: totalFees || 0, 
           change: 0, 
           trend: 'up',
           currency: 'USD'
         },
         totalAdvancesOutstanding: { 
-          value: totalAdvances[0]?.total || 0, 
+          value: totalAdvances || 0, 
           change: 0, 
           trend: 'down',
           currency: 'USD'
         },
         totalReservesHeld: { 
-          value: totalReserves[0]?.total || 0, 
+          value: totalReserves || 0, 
           change: 0, 
           trend: 'up',
           currency: 'USD'
@@ -67,10 +86,9 @@ router.get('/metrics', async (req, res) => {
 // Dashboard metrics endpoint
 router.get('/dashboard-metrics', async (req, res) => {
   try {
-    const totalTransactions = await TransactionModel.countDocuments();
-    const totalTransactionValue = await TransactionModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$invoiceValue' } } }
-    ]);
+    const transactions = await listTransactions();
+    const totalTransactions = transactions.length;
+    const totalTransactionValue = transactions.reduce((sum, tx) => sum + (tx.invoiceValue || 0), 0);
     
     const dashboardKPIs = {
       totalTransactions: {
@@ -97,7 +115,7 @@ router.get('/dashboard-metrics', async (req, res) => {
         unit: '%'
       },
       totalDueAmount: {
-        value: totalTransactionValue[0]?.total || 0,
+        value: totalTransactionValue || 0,
         change: 0,
         trend: 'down' as const,
         currency: 'USD'
@@ -173,12 +191,7 @@ const calculateLateFees = async (transaction: any) => {
   try {
     // Get buyer entity to check late fee configuration. Support both business entityId and MongoDB ObjectId.
     const buyerId = String(transaction.buyerId || '');
-    const buyer = await EntityModel.findOne({
-      $or: [
-        { entityId: buyerId },
-        { _id: mongoose.Types.ObjectId.isValid(buyerId) ? buyerId : null }
-      ]
-    });
+    const buyer = await getEntityById(buyerId);
 
     const lateFeeRatePercent = parseFloat(String(buyer?.lateFees || '0').replace('%', '').trim());
     if (!buyer || Number.isNaN(lateFeeRatePercent) || lateFeeRatePercent <= 0) {
@@ -219,31 +232,45 @@ router.get('/open-invoices', async (req, res) => {
     console.log('🔍 Fetching open invoices...');
     
     // Only include funded transactions - these are the actual "open invoices" waiting for buyer payment
-    const openTransactions = await TransactionModel.find({
-      status: { $in: ['funded', 'partial_payment'] },
-      fundedAt: { $exists: true }
-    }).sort({ dueDate: 1, createdAt: -1 }).limit(50);
+    const openTransactions = (await listTransactions())
+      .filter((transaction) =>
+        ['funded', 'partial_payment'].includes(String(transaction.status || '').toLowerCase()) &&
+        Boolean(transaction.fundedAt)
+      )
+      .sort((a, b) => {
+        const aDue = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+        const bDue = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+        if (aDue !== bDue) {
+          return aDue - bDue;
+        }
+        const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bCreated - aCreated;
+      })
+      .slice(0, 50);
     
     console.log(`📋 Found ${openTransactions.length} open invoices`);
     
     // Calculate late fees and proper amounts for each transaction
     const invoicesWithLateFees = await Promise.all(
       openTransactions.map(async (transaction) => {
-        const lateFees = await calculateLateFees(transaction);
+        const totalLateFees = await calculateLateFees(transaction);
+        const totalLateFeesPaid = (transaction.paymentHistory || []).reduce((sum: number, payment: any) => sum + (payment.lateFeesPaid || 0), 0);
+        const outstandingLateFees = Math.max(0, totalLateFees - totalLateFeesPaid);
         const agingDays = transaction.dueDate ? 
           Math.max(0, Math.floor((Date.now() - new Date(transaction.dueDate).getTime()) / (1000 * 60 * 60 * 24))) : 0;
         
         // Buyer obligation model: buyer owes full invoice amount
         const netPaidToSupplier = transaction.advanceAmount - (transaction.feeAmount || 0);
         const buyerOwes = transaction.invoiceValue || transaction.invoiceAmount || 0;
-        const totalPaidByBuyer = (transaction.paidAmount || 0); // What buyer has paid so far
+        const totalPaidByBuyer = (transaction.paidAmount || 0); // What buyer has paid so far towards principal
         const remainingAmount = Math.max(0, buyerOwes - totalPaidByBuyer); // What buyer still owes
-        const totalAmountDue = remainingAmount + lateFees; // Including late fees
+        const totalAmountDue = remainingAmount + outstandingLateFees; // Including outstanding late fees
         
         // Calculate net amount paid to supplier (advance - fees)
         
         // Check if invoice is fully paid and can be closed
-        const isFullyPaid = remainingAmount <= 0;
+        const isFullyPaid = remainingAmount <= 0 && outstandingLateFees <= 0;
         const canReleaseReserve = isFullyPaid && transaction.reserveAmount > 0;
         
         return {
@@ -264,7 +291,7 @@ router.get('/open-invoices', async (req, res) => {
           dueDate: transaction.dueDate,
           status: isFullyPaid ? 'ready_for_closure' : transaction.status,
           agingDays: agingDays,
-          lateFees: lateFees,
+          lateFees: outstandingLateFees,
           fundedAt: transaction.fundedAt,
           createdAt: transaction.createdAt,
           updatedAt: transaction.updatedAt,
@@ -318,7 +345,7 @@ router.delete('/open-invoices/:invoiceId', async (req, res) => {
     console.log(`🗑️ Attempting to delete invoice: ${invoiceId}`);
     
     // Find the transaction first to get details for logging
-    const transaction = await TransactionModel.findOne({ transactionId: invoiceId });
+    const transaction = await getTransactionById(invoiceId);
     if (!transaction) {
       return res.status(404).json({
         success: false,
@@ -335,9 +362,9 @@ router.delete('/open-invoices/:invoiceId', async (req, res) => {
     }
     
     // Delete the transaction
-    const deleteResult = await TransactionModel.deleteOne({ transactionId: invoiceId });
-    
-    if (deleteResult.deletedCount === 0) {
+    const deletedTransaction = await deleteTransaction(invoiceId);
+
+    if (!deletedTransaction) {
       return res.status(404).json({
         success: false,
         message: 'Invoice not found or already deleted'
@@ -385,7 +412,7 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
     console.log(`💰 Recording payment for invoice ${invoiceId}:`, { amount, paidAt, reference });
 
     // Find the transaction
-    const transaction = await TransactionModel.findOne({ transactionId: invoiceId });
+    const transaction = await getTransactionById(invoiceId);
     if (!transaction) {
       return res.status(404).json({
         success: false,
@@ -407,15 +434,23 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
     const buyerOwes = transaction.invoiceValue || transaction.invoiceAmount || 0;
     const totalPaidSoFar = (transaction.paidAmount || 0);
     const remainingAmount = Math.max(0, buyerOwes - totalPaidSoFar);
-    const currentLateFees = await calculateLateFees(transaction);
+    
+    // Calculate outstanding late fees
+    const totalLateFees = await calculateLateFees(transaction);
+    const totalLateFeesPaid = (transaction.paymentHistory || []).reduce((sum: number, p: any) => sum + (p.lateFeesPaid || 0), 0);
+    const currentLateFees = Math.max(0, totalLateFees - totalLateFeesPaid);
     const totalDue = remainingAmount + currentLateFees;
 
     if (paymentAmount > totalDue) {
       return res.status(400).json({
         success: false,
-        message: `Payment amount cannot exceed total due amount: $${totalDue.toFixed(2)} (Remaining: $${remainingAmount.toFixed(2)} + Late Fees: $${currentLateFees.toFixed(2)})`
+        message: `Payment amount cannot exceed total due amount: $${totalDue.toFixed(2)} (Remaining Principal: $${remainingAmount.toFixed(2)} + Outstanding Late Fees: $${currentLateFees.toFixed(2)})`
       });
     }
+
+    // Allocate payment: first to outstanding late fees, then to principal
+    const paymentLateFeesPaid = Math.min(currentLateFees, paymentAmount);
+    const principalPaid = paymentAmount - paymentLateFeesPaid;
 
     // Create payment record
     const payment = {
@@ -425,28 +460,25 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
       paidBy: paidBy || 'Unknown',
       reference: reference || '',
       notes: notes || '',
-      lateFeesPaid: Math.min(currentLateFees, paymentAmount)
+      lateFeesPaid: paymentLateFeesPaid
     };
 
     // Update transaction with payment information
-    const newTotalPaid = totalPaidSoFar + paymentAmount;
+    const newTotalPaid = totalPaidSoFar + principalPaid;
     const newRemainingAmount = Math.max(0, buyerOwes - newTotalPaid);
-    const updatedStatus = newRemainingAmount <= 0 ? 'settled' : 'partial_payment';
+    const outstandingLateFeesAfterPayment = currentLateFees - paymentLateFeesPaid;
+    const isFullyPaid = newRemainingAmount <= 0 && outstandingLateFeesAfterPayment <= 0;
+    const updatedStatus = isFullyPaid ? 'settled' : 'partial_payment';
     
-    await TransactionModel.findOneAndUpdate(
-      { transactionId: invoiceId },
-      {
-        $push: {
-          paymentHistory: payment
-        },
-        $set: {
-          paidAmount: newTotalPaid,
-          status: updatedStatus,
-          lastPaymentAt: new Date(paidAt || new Date()),
-          ...(updatedStatus === 'settled' && { settledAt: new Date() })
-        }
-      }
-    );
+    const updatedPaymentHistory = [...(transaction.paymentHistory || []), payment];
+
+    await updateTransaction(invoiceId, {
+      paymentHistory: updatedPaymentHistory,
+      paidAmount: newTotalPaid,
+      status: updatedStatus,
+      lastPaymentAt: new Date(paidAt || new Date()).toISOString(),
+      ...(updatedStatus === 'settled' ? { settledAt: new Date().toISOString() } : {})
+    });
 
     console.log(`✅ Payment recorded: ${paymentAmount} for invoice ${invoiceId}. New status: ${updatedStatus}`);
 
@@ -465,7 +497,7 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
     }
 
     // Fetch updated transaction for response
-    const updatedTransaction = await TransactionModel.findOne({ transactionId: invoiceId });
+    const updatedTransaction = await getTransactionById(invoiceId);
     if (!updatedTransaction) {
       return res.status(404).json({
         success: false,
@@ -506,7 +538,7 @@ router.post('/open-invoices/:invoiceId/payment', async (req, res) => {
 // Get closed invoices
 router.get('/closed-invoices', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
+    if (!isDynamoConfigured()) {
       const closedInvoices = mockTransactions
         .filter((transaction: any) => ['settled', 'completed', 'closed'].includes(transaction.status))
         .map((transaction: any) => ({
@@ -545,9 +577,19 @@ router.get('/closed-invoices', async (req, res) => {
       });
     }
 
-    const closedTransactions = await TransactionModel.find({
-      status: { $in: ['settled', 'completed', 'closed'] }
-    }).sort({ settledAt: -1, updatedAt: -1 }).limit(50);
+    const closedTransactions = (await listTransactions())
+      .filter((transaction) => ['settled', 'completed', 'closed'].includes(String(transaction.status || '').toLowerCase()))
+      .sort((a, b) => {
+        const aSettled = a.settledAt ? new Date(a.settledAt).getTime() : 0;
+        const bSettled = b.settledAt ? new Date(b.settledAt).getTime() : 0;
+        if (aSettled !== bSettled) {
+          return bSettled - aSettled;
+        }
+        const aUpdated = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const bUpdated = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        return bUpdated - aUpdated;
+      })
+      .slice(0, 50);
 
     const closedInvoices = await Promise.all(
       closedTransactions.map(async (transaction) => {
@@ -601,7 +643,7 @@ router.get('/open-invoices/:invoiceId/closure-report', async (req, res) => {
   try {
     const { invoiceId } = req.params;
 
-    const transaction = await TransactionModel.findOne({ transactionId: invoiceId });
+    const transaction = await getTransactionById(invoiceId);
     if (!transaction) {
       return res.status(404).json({
         success: false,
@@ -610,8 +652,8 @@ router.get('/open-invoices/:invoiceId/closure-report', async (req, res) => {
     }
 
     // Get supplier and buyer details
-    const supplier = await EntityModel.findOne({ entityId: transaction.supplierId });
-    const buyer = await EntityModel.findOne({ entityId: transaction.buyerId });
+    const supplier = await getEntityById(String(transaction.supplierId || ''));
+    const buyer = await getEntityById(String(transaction.buyerId || ''));
 
     const lateFees = await calculateLateFees(transaction);
     const agingDays = transaction.dueDate ? 
@@ -884,9 +926,8 @@ Report ID: CLOSURE_${transaction.transactionId}_${new Date().getFullYear()}${Str
 // Get supplier summary
 router.get('/supplier-summary', async (req, res) => {
   try {
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('MongoDB not connected, using mock data');
+    if (!isDynamoConfigured()) {
+      console.warn('DynamoDB not configured, using mock data');
       return res.json({
         success: true,
         message: 'Supplier summary retrieved successfully (mock data)',
@@ -897,7 +938,7 @@ router.get('/supplier-summary', async (req, res) => {
     console.log('🔍 Treasury: Fetching supplier summaries...');
     
     // Debug: Show all transactions first
-    const allTransactionsDebug = await TransactionModel.find({});
+    const allTransactionsDebug = await listTransactions();
     console.log(`\n🔍 DEBUG: Found ${allTransactionsDebug.length} total transactions in database:`);
     allTransactionsDebug.forEach((t, i) => {
       console.log(`   Transaction ${i + 1}:`, {
@@ -911,22 +952,16 @@ router.get('/supplier-summary', async (req, res) => {
       });
     });
     
-    const suppliers = await EntityModel.find({ type: 'supplier' });
+    const suppliers = (await listEntities()).filter((entity) => entity.type === 'supplier');
     console.log(`📊 Found ${suppliers.length} suppliers:`, suppliers.map(s => s.name));
     
     const supplierSummaries = await Promise.all(
       suppliers.map(async (supplier) => {
         console.log(`\n💰 Processing supplier: ${supplier.name} (ID: ${supplier.entityId})`);
-        console.log(`   🆔 Entity ObjectId: ${supplier._id}`);
-        console.log(`   🆔 Entity ObjectId toString: ${supplier._id?.toString()}`);
-        
         // First, let's see ALL transactions for this supplier
-        const allTransactions = await TransactionModel.find({ 
-          $or: [
-            { supplierId: supplier.entityId },
-            { supplierId: supplier._id?.toString() }
-          ]
-        });
+        const allTransactions = allTransactionsDebug.filter(
+          (transaction) => String(transaction.supplierId || '') === String(supplier.entityId)
+        );
         console.log(`   📋 Total transactions: ${allTransactions.length}`);
         
         if (allTransactions.length > 0) {
@@ -944,24 +979,11 @@ router.get('/supplier-summary', async (req, res) => {
         
         // Get transactions that need funding (approved but not yet funded)
         // Look for both entityId and MongoDB _id as supplierId for backward compatibility
-        const transactions = await TransactionModel.find({ 
-          $and: [
-            {
-              $or: [
-                { supplierId: supplier.entityId },  // Current format
-                { supplierId: supplier._id?.toString() }  // Backward compatibility with ObjectId
-              ]
-            },
-            { status: 'approved' },
-            { paymentDue: true },
-            {
-              $or: [
-                { payoutStatus: { $ne: 'processed' } },
-                { payoutStatus: { $exists: false } }
-              ]
-            }
-          ]
-        });
+        const transactions = allTransactions.filter((transaction) =>
+          String(transaction.status || '').toLowerCase() === 'approved' &&
+          Boolean(transaction.paymentDue) &&
+          String(transaction.payoutStatus || '').toLowerCase() !== 'processed'
+        );
         
         console.log(`   ✅ Approved transactions ready for payment: ${transactions.length}`);
         
@@ -980,33 +1002,11 @@ router.get('/supplier-summary', async (req, res) => {
         }, 0);
         console.log(`   💸 Total pending payment (net after fees): $${totalPendingPayment}`);
         
-        const totalAdvanced = await TransactionModel.aggregate([
-          { 
-            $match: { 
-              $and: [
-                {
-                  $or: [
-                    { supplierId: supplier.entityId },
-                    { supplierId: supplier._id?.toString() }
-                  ]
-                },
-                { status: 'funded' }
-              ]
-            }
-          },
-          { $group: { _id: null, total: { $sum: '$advanceAmount' } } }
-        ]);
-        const totalOutstanding = await TransactionModel.aggregate([
-          { 
-            $match: { 
-              $or: [
-                { supplierId: supplier.entityId },
-                { supplierId: supplier._id?.toString() }
-              ]
-            }
-          },
-          { $group: { _id: null, total: { $sum: '$invoiceValue' } } }
-        ]);
+        const totalAdvanced = allTransactions
+          .filter((transaction) => String(transaction.status || '').toLowerCase() === 'funded')
+          .reduce((sum, transaction) => sum + (transaction.advanceAmount || 0), 0);
+        const totalOutstanding = allTransactions
+          .reduce((sum, transaction) => sum + (transaction.invoiceValue || 0), 0);
         
         return {
           supplierId: supplier.entityId,
@@ -1020,8 +1020,8 @@ router.get('/supplier-summary', async (req, res) => {
             currency: 'INR'
           },
           pendingAmount: totalPendingPayment,
-          totalAdvanced: totalAdvanced[0]?.total || 0,
-          totalOutstanding: totalOutstanding[0]?.total || 0,
+          totalAdvanced: totalAdvanced || 0,
+          totalOutstanding: totalOutstanding || 0,
           pendingPayments: totalPendingPayment,
           lastPaymentDate: null,
           status: supplier.status,
@@ -1058,18 +1058,25 @@ router.get('/incoming-payments', async (req, res) => {
     console.log('🔍 Fetching incoming payment reserves...');
     
     // Find funded transactions that could be settled or have reserves to be released
-    const fundedTransactions = await TransactionModel.find({
-      status: { $in: ['funded', 'partial_payment', 'settled'] },
-      fundedAt: { $exists: true },
-      reserveAmount: { $gt: 0 }
-    }).sort({ fundedAt: -1 }).limit(50);
+    const fundedTransactions = (await listTransactions())
+      .filter((transaction) =>
+        ['funded', 'partial_payment', 'settled'].includes(String(transaction.status || '').toLowerCase()) &&
+        Boolean(transaction.fundedAt) &&
+        (transaction.reserveAmount || 0) > 0
+      )
+      .sort((a, b) => {
+        const aFunded = a.fundedAt ? new Date(a.fundedAt).getTime() : 0;
+        const bFunded = b.fundedAt ? new Date(b.fundedAt).getTime() : 0;
+        return bFunded - aFunded;
+      })
+      .slice(0, 50);
     
     console.log(`📋 Found ${fundedTransactions.length} transactions with reserves`);
     
     // Get supplier details for each transaction
     const incomingPayments = await Promise.all(
       fundedTransactions.map(async (transaction) => {
-        const supplier = await EntityModel.findOne({ entityId: transaction.supplierId });
+        const supplier = await findEntityByAnyId(String(transaction.supplierId || ''));
         
         // Calculate payment breakdown
         const invoiceAmount = transaction.invoiceValue;
@@ -1098,14 +1105,7 @@ router.get('/incoming-payments', async (req, res) => {
           dueDate: transaction.dueDate,
           fundedAt: transaction.fundedAt,
           status: paymentStatus,
-          bankDetails: supplier?.bankDetails || {
-            beneficiary: transaction.supplierName,
-            bank: 'Bank details pending',
-            branch: 'Branch details pending',
-            accountNumber: 'Account pending',
-            ifscCode: 'IFSC pending',
-            currency: transaction.currency || 'USD'
-          },
+          bankDetails: normalizeBankDetails(supplier?.bankDetails, transaction.supplierName, transaction.currency || 'USD'),
           paymentBreakdown: {
             invoiceAmount: invoiceAmount,
             paidAmount: paidAmount,
@@ -1150,9 +1150,9 @@ router.get('/incoming-payments', async (req, res) => {
 // Get payouts list (GET method)
 router.get('/payouts', async (req, res) => {
   try {
-    const recentTransactions = await TransactionModel.find({
-      status: { $in: ['approved', 'processing'] }
-    }).sort({ createdAt: -1 }).limit(20);
+    const recentTransactions = (await listTransactions())
+      .filter((transaction) => ['approved', 'processing'].includes(String(transaction.status || '').toLowerCase()))
+      .slice(0, 20);
     
     const payouts = recentTransactions.map(transaction => ({
       id: transaction.transactionId,
@@ -1299,7 +1299,7 @@ router.post('/payout', async (req, res) => {
     }
     
     // Find supplier
-    const supplier = await EntityModel.findOne({ entityId: supplierId });
+    const supplier = await getEntityById(String(supplierId || ''));
     if (!supplier) {
       return res.status(404).json({
         success: false,
@@ -1307,18 +1307,12 @@ router.post('/payout', async (req, res) => {
       });
     }
     
-    // Update transaction statuses to 'funded'
-    const updateResult = await TransactionModel.updateMany(
-      { transactionId: { $in: transactionIds } },
-      { 
-        $set: { 
-          status: 'funded',
-          fundedAt: new Date(),
-          payoutAmount: amount,
-          payoutStatus: 'processed'
-        }
-      }
-    );
+    const updateResult = await updateTransactionsByIds(transactionIds, {
+      status: 'funded',
+      fundedAt: new Date().toISOString(),
+      payoutAmount: amount,
+      payoutStatus: 'processed'
+    });
     
     console.log('✅ Updated transactions:', updateResult);
     
@@ -1326,7 +1320,7 @@ router.post('/payout', async (req, res) => {
     const payoutId = `PAYOUT_${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     const reference = `PAY_${Date.now()}`;
     
-    const payoutRecord = new PayoutRecordModel({
+    const payoutRecord = await createPayoutRecord({
       payoutId,
       supplierId,
       supplierName: supplier.name,
@@ -1345,13 +1339,11 @@ router.post('/payout', async (req, res) => {
         paymentProofFileName: paymentInstruction.paymentProofFileName ? String(paymentInstruction.paymentProofFileName) : ''
       },
       status: 'completed', // Mark as completed immediately for demo
-      processedAt: new Date(),
-      completedAt: new Date(),
+      processedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
       reference,
       method: 'bank_transfer'
     });
-    
-    await payoutRecord.save();
     console.log('✅ Payout record saved:', payoutId);
     
     // Broadcast notification
@@ -1395,9 +1387,7 @@ router.post('/payout', async (req, res) => {
 router.get('/payout-history', async (req, res) => {
   try {
     // Get payout records from database
-    const payoutRecords = await PayoutRecordModel.find({})
-      .sort({ createdAt: -1 })
-      .limit(50);
+    const payoutRecords = (await listPayoutRecords()).slice(0, 50);
     
     const payoutHistory = payoutRecords.map(payout => ({
       id: payout.payoutId,
@@ -1408,7 +1398,9 @@ router.get('/payout-history', async (req, res) => {
       processedAt: payout.processedAt,
       completedAt: payout.completedAt,
       reference: payout.reference,
-      transactionIds: payout.transactionIds
+      transactionIds: payout.transactionIds,
+      type: payout.type || 'advance_payment',
+      method: payout.method || 'bank_transfer'
     }));
     
     res.json({
@@ -1441,7 +1433,7 @@ router.get('/payout/:payoutId/acknowledgement', async (req, res) => {
     }
     
     // Find payout record
-    const payoutRecord = await PayoutRecordModel.findOne({ payoutId });
+    const payoutRecord = await getPayoutRecordById(payoutId);
     if (!payoutRecord) {
       console.log(`❌ Payout record not found for ID: ${payoutId}`);
       return res.status(404).json({
@@ -1480,8 +1472,8 @@ ${payoutRecord.bankDetails?.swiftCode ? `SWIFT Code: ${payoutRecord.bankDetails.
 
 Amount Paid: ${payoutRecord.bankDetails?.currency || 'USD'} ${payoutRecord.amount ? payoutRecord.amount.toLocaleString() : '0.00'}
 Payment Method: ${payoutRecord.method ? payoutRecord.method.replace('_', ' ').toUpperCase() : 'BANK TRANSFER'}
-Processed Date: ${payoutRecord.processedAt ? payoutRecord.processedAt.toLocaleDateString() : 'N/A'}
-Completed Date: ${payoutRecord.completedAt ? payoutRecord.completedAt.toLocaleDateString() : 'Pending'}
+Processed Date: ${payoutRecord.processedAt ? new Date(payoutRecord.processedAt).toLocaleDateString() : 'N/A'}
+Completed Date: ${payoutRecord.completedAt ? new Date(payoutRecord.completedAt).toLocaleDateString() : 'Pending'}
 
 --- TREASURY PAYMENT FORM DETAILS ---
 Serial Number: ${payoutRecord.paymentInstruction?.serialNumber || 'N/A'}
@@ -1548,9 +1540,7 @@ router.post('/pay-reserve', async (req, res) => {
     }
     
     // Find the transaction
-    const transaction = await TransactionModel.findOne({ 
-      transactionId: incomingPaymentId 
-    });
+    const transaction = await getTransactionById(incomingPaymentId);
     
     if (!transaction) {
       return res.status(404).json({
@@ -1568,47 +1558,46 @@ router.post('/pay-reserve', async (req, res) => {
     }
     
     // Find supplier for bank details
-    const supplier = await EntityModel.findOne({ entityId: transaction.supplierId });
+    const supplier = await findEntityByAnyId(String(transaction.supplierId || ''));
     if (!supplier) {
       return res.status(404).json({
         success: false,
         message: 'Supplier not found'
       });
     }
+
+    const payoutBankDetails = normalizeBankDetails(
+      supplier.bankDetails,
+      transaction.supplierName,
+      transaction.currency || 'USD'
+    );
     
     // Create reserve payment record
     const reservePayoutId = `RESERVE_PAY_${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     const reserveReference = `RSV_${Date.now()}`;
     
-    const reservePayoutRecord = new PayoutRecordModel({
+    const reservePayoutRecord = await createPayoutRecord({
       payoutId: reservePayoutId,
       supplierId: transaction.supplierId,
       supplierName: transaction.supplierName,
       amount: amount,
       transactionIds: [transaction.transactionId],
-      bankDetails: supplier.bankDetails || {},
+      bankDetails: payoutBankDetails as any,
       status: 'completed',
-      processedAt: new Date(),
-      completedAt: new Date(),
+      processedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
       reference: reserveReference,
       method: 'reserve_release',
       type: 'reserve_payment'
     });
     
-    await reservePayoutRecord.save();
-    
     // Update transaction status to completed and mark reserve as released
-    await TransactionModel.findOneAndUpdate(
-      { transactionId: incomingPaymentId },
-      {
-        $set: {
-          status: 'completed',
-          completedAt: new Date(),
-          reserveReleasedAt: new Date(),
-          reservePayoutId: reservePayoutId
-        }
-      }
-    );
+    await updateTransaction(incomingPaymentId, {
+      status: 'completed',
+      completedAt: new Date().toISOString(),
+      reserveReleasedAt: new Date().toISOString(),
+      reservePayoutId: reservePayoutId
+    });
     
     console.log('✅ Reserve payment processed:', reservePayoutId);
     
@@ -1652,7 +1641,7 @@ router.post('/open-invoices/:invoiceId/release-reserves', async (req, res) => {
     console.log(`💰 Processing reserve release for invoice: ${invoiceId}`);
     
     // Find the transaction
-    const transaction = await TransactionModel.findOne({ transactionId: invoiceId });
+    const transaction = await getTransactionById(invoiceId);
     
     if (!transaction) {
       return res.status(404).json({
@@ -1688,7 +1677,7 @@ router.post('/open-invoices/:invoiceId/release-reserves', async (req, res) => {
     }
     
     // Find supplier for bank details
-    const supplier = await EntityModel.findOne({ entityId: transaction.supplierId });
+    const supplier = await getEntityById(String(transaction.supplierId || ''));
     if (!supplier) {
       return res.status(404).json({
         success: false,
@@ -1700,35 +1689,28 @@ router.post('/open-invoices/:invoiceId/release-reserves', async (req, res) => {
     const reservePayoutId = `RESERVE_${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     const reserveReference = `RSV_${Date.now()}`;
     
-    const reservePayoutRecord = new PayoutRecordModel({
+    const reservePayoutRecord = await createPayoutRecord({
       payoutId: reservePayoutId,
       supplierId: transaction.supplierId,
       supplierName: transaction.supplierName,
       amount: transaction.reserveAmount,
       transactionIds: [transaction.transactionId],
-      bankDetails: supplier.bankDetails || {},
+      bankDetails: (supplier.bankDetails || {}) as any,
       status: 'completed',
-      processedAt: new Date(),
-      completedAt: new Date(),
+      processedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
       reference: reserveReference,
       method: 'reserve_release',
       type: 'reserve_payment',
       notes: notes || 'Reserve released via closure dialog'
     });
     
-    await reservePayoutRecord.save();
-    
     // Update transaction status to mark reserve as released
-    await TransactionModel.findOneAndUpdate(
-      { transactionId: invoiceId },
-      {
-        $set: {
-          reserveReleasedAt: new Date(),
-          reservePayoutId: reservePayoutId,
-          completedAt: new Date()
-        }
-      }
-    );
+    await updateTransaction(invoiceId, {
+      reserveReleasedAt: new Date().toISOString(),
+      reservePayoutId: reservePayoutId,
+      completedAt: new Date().toISOString()
+    });
     
     console.log('✅ Reserve payment released via closure dialog:', reservePayoutId);
     

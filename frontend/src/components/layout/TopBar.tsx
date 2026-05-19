@@ -22,7 +22,7 @@ export function TopBar() {
   return (
     <header className="h-20 border-b border-border bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 flex items-center justify-between px-6 sticky top-0 z-40">
       <div>
-        <h2 className="text-xl font-semibold text-slate-900">Welcome to Whizunik, {displayName}</h2>
+        <h2 className="text-xl font-semibold text-slate-900">Welcome to Melenco, {displayName}</h2>
         <p className="text-sm text-slate-500">Trade finance overview and invoice intelligence</p>
       </div>
 
@@ -44,3 +44,4 @@ export function TopBar() {
     </header>
   );
 }
+

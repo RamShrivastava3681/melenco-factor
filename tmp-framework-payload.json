@@ -1,0 +1,29 @@
+{
+  "agreementDate": "18 July 2024",
+  "place": "New Delhi",
+  "seller": {
+    "name": "LAJ EXPORTS LIMITED",
+    "address": "Chandan Hulla Khasra No. 150, New Delhi, India"
+  },
+  "sellerCorporateId": "U74999DL2018PTC000000",
+  "sellerTaxId": "09AAACL9688G2ZW",
+  "sellerContactPerson": "Naresh Aneja",
+  "sellerEmail": "naresh@lajexports.com",
+  "sellerPhone": "+91 9811013606",
+  "transactionFeeTiers": [
+    {"range": "0-30 Days", "fee": "0.47%"},
+    {"range": "31-60 Days", "fee": "1.41%"},
+    {"range": "61-90 Days", "fee": "2.20%"},
+    {"range": "91-120 Days", "fee": "3.10%"}
+  ],
+  "factoringFee": "0.94%",
+  "advanceRate": "90%",
+  "schedule1": {
+    "primaryContacts": [
+      {"firstName": "Naresh", "lastName": "Aneja", "email": "naresh@lajexports.com", "phone": "+91 9811013606"}
+    ],
+    "bankAccounts": [
+      {"currency": "USD", "accountHolder": "LAJ EXPORTS LIMITED", "accountNumber": "021000045987", "swiftCode": "CITIUS33"}
+    ]
+  }
+}

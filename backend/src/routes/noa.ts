@@ -5,7 +5,16 @@ import crypto from 'crypto';
 import puppeteer from 'puppeteer';
 import path from 'path';
 import fs from 'fs';
-import { TransactionModel, NOAModel, EntityModel } from '../models/schemas';
+import {
+  createNoa,
+  getEntityById,
+  getNoaByToken,
+  getNoaByTransactionId,
+  getTransactionById,
+  listNoasByStatus,
+  updateNoa,
+  updateTransaction
+} from '../data/dynamoRepository';
 import { broadcastNotification } from '../index';
 import { getDocumentFromS3, uploadDocumentToS3 } from '../utils/s3';
 
@@ -36,8 +45,8 @@ const buildEntityAddress = (entity: any): string[] => {
 
 const getNOAPartyDetails = async (transaction: any) => {
   const [buyerEntity, supplierEntity] = await Promise.all([
-    EntityModel.findOne({ entityId: transaction.buyerId }).lean(),
-    EntityModel.findOne({ entityId: transaction.supplierId }).lean()
+    getEntityById(String(transaction.buyerId || '')),
+    getEntityById(String(transaction.supplierId || ''))
   ]);
 
   return {
@@ -102,7 +111,7 @@ const generateSignedNOAPdfBuffer = async (noaData: any, transaction: any, partyD
   const pdfHtml = generateSignedNOAPDFHtml(noaData, transaction, partyDetails);
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
-  await page.setContent(pdfHtml, { waitUntil: 'networkidle0' });
+  await page.setContent(pdfHtml, { waitUntil: 'networkidle0' as any });
 
   const pdfResult = await page.pdf({
     format: 'A4',
@@ -132,7 +141,7 @@ router.post('/send', async (req, res) => {
     }
 
     // Find the transaction
-    const transaction = await TransactionModel.findOne({ transactionId });
+    const transaction = await getTransactionById(transactionId);
     if (!transaction) {
       return res.status(404).json({
         success: false,
@@ -147,7 +156,7 @@ router.post('/send', async (req, res) => {
     expiresAt.setHours(expiresAt.getHours() + 72); // 72 hour expiry
 
     // Create new NOA document
-    const newNOA = new NOAModel({
+    const newNOA = {
       noaId: token,
       transactionId,
       buyerEmail,
@@ -162,18 +171,23 @@ router.post('/send', async (req, res) => {
       feeAmount: transaction.feeAmount,
       netAmount: transaction.netAmount,
       dueDate: transaction.dueDate || '',
-      status: 'sent',
+      status: 'sent' as const,
       emailSent: false,
       accessCount: 0
-    });
+    };
 
-    // Save NOA to MongoDB
-    const savedNOA = await newNOA.save();
+    const savedNOA = await createNoa(newNOA);
 
     // Update transaction status
     transaction.noaStatus = 'sent';
-    transaction.noaSentAt = new Date();
+    transaction.noaSentAt = new Date().toISOString();
     transaction.noaToken = token;
+
+    await updateTransaction(transaction.transactionId, {
+      noaStatus: 'sent',
+      noaSentAt: transaction.noaSentAt,
+      noaToken: token
+    });
 
     // Create email content
     const referenceNumber = `REF-${transaction.transactionId}-${Date.now().toString().slice(-6)}`;
@@ -251,10 +265,10 @@ router.post('/send', async (req, res) => {
         html: emailBody
       });
 
-      // Update NOA to mark email as sent
-      savedNOA.emailSent = true;
-      savedNOA.emailSentAt = new Date();
-      await savedNOA.save();
+      await updateNoa(savedNOA.noaId, {
+        emailSent: true,
+        emailSentAt: new Date().toISOString()
+      });
 
       console.log(`NOA email sent successfully to ${buyerEmail} for transaction ${transactionId}`);
     } catch (emailError) {
@@ -290,10 +304,7 @@ router.get('/signed', async (req, res) => {
     const { limit = '200' } = req.query;
     const limitNum = Math.max(1, Math.min(parseInt(limit as string, 10) || 200, 1000));
 
-    const signedNoas = await NOAModel.find({ status: 'acknowledged' })
-      .sort({ acknowledgedAt: -1, updatedAt: -1 })
-      .limit(limitNum)
-      .lean();
+    const signedNoas = (await listNoasByStatus('acknowledged')).slice(0, limitNum);
 
     res.json({
       success: true,
@@ -316,7 +327,7 @@ router.get('/signed', async (req, res) => {
 router.get('/:token', async (req, res) => {
   try {
     const { token } = req.params;
-    const noaData = await NOAModel.findOne({ noaId: token });
+    const noaData = await getNoaByToken(token);
 
     if (!noaData) {
       return res.status(404).json({
@@ -334,7 +345,7 @@ router.get('/:token', async (req, res) => {
     }
 
     // Check if expired (72 hours from creation)
-    const expiryDate = new Date(noaData.createdAt);
+    const expiryDate = new Date(noaData.createdAt ?? new Date().toISOString());
     expiryDate.setHours(expiryDate.getHours() + 72);
     
     if (new Date() > expiryDate) {
@@ -345,28 +356,26 @@ router.get('/:token', async (req, res) => {
     }
 
     // Update access tracking
-    noaData.accessCount += 1;
-    noaData.lastAccessedAt = new Date();
-    
-    // Update status to delivered if first time
-    if (noaData.status === 'sent') {
-      noaData.status = 'delivered';
-    }
-    
-    await noaData.save();
+    const updatedNoa = await updateNoa(token, {
+      accessCount: (noaData.accessCount || 0) + 1,
+      lastAccessedAt: new Date().toISOString(),
+      status: noaData.status === 'sent' ? 'delivered' : noaData.status
+    });
+
+    const effectiveNoa = updatedNoa || noaData;
 
     // Get transaction details
-    const transaction = await TransactionModel.findOne({ transactionId: noaData.transactionId });
+    const transaction = await getTransactionById(effectiveNoa.transactionId);
 
     const partyDetails = transaction ? await getNOAPartyDetails(transaction) : null;
 
     res.json({
       success: true,
       data: {
-        noaData,
+        noaData: effectiveNoa,
         transaction,
         partyDetails,
-        canSign: noaData.status !== 'acknowledged'
+        canSign: effectiveNoa.status !== 'acknowledged'
       }
     });
 
@@ -401,7 +410,7 @@ router.post('/:token/sign', async (req, res) => {
       });
     }
 
-    const noaData = await NOAModel.findOne({ noaId: token });
+    const noaData = await getNoaByToken(token);
 
     if (!noaData) {
       return res.status(404).json({
@@ -418,29 +427,31 @@ router.post('/:token/sign', async (req, res) => {
       });
     }
 
-    // Update NOA status to acknowledged
-    noaData.status = 'acknowledged';
-    noaData.signatoryData = {
-      fullName,
-      position,
-      ipAddress,
-      userAgent,
-      signatureDataUrl,
-      photoDataUrl,
-      location: {
-        city: location.city,
-        country: location.country,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        accuracy: typeof location.accuracy === 'number' ? location.accuracy : undefined,
-        capturedAt: new Date()
-      }
-    };
-    noaData.acknowledgedAt = new Date();
-    await noaData.save();
+    const updatedNoa = await updateNoa(token, {
+      status: 'acknowledged',
+      signatoryData: {
+        fullName,
+        position,
+        ipAddress,
+        userAgent,
+        signatureDataUrl,
+        photoDataUrl,
+        location: {
+          city: location.city,
+          country: location.country,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: typeof location.accuracy === 'number' ? location.accuracy : undefined,
+          capturedAt: new Date().toISOString()
+        }
+      },
+      acknowledgedAt: new Date().toISOString()
+    });
+
+    const effectiveNoa = updatedNoa || noaData;
 
     // Update transaction NOA status to signed and create supplier payment obligation
-    const transaction = await TransactionModel.findOne({ transactionId: noaData.transactionId });
+    const transaction = await getTransactionById(effectiveNoa.transactionId);
     if (transaction) {
       console.log('🔄 Before update:', {
         transactionId: transaction.transactionId,
@@ -452,16 +463,17 @@ router.post('/:token/sign', async (req, res) => {
         advanceAmount: transaction.advanceAmount
       });
       
-      transaction.noaStatus = 'signed';
-      transaction.status = 'approved'; // Update main transaction status
-      transaction.paymentDue = true; // Mark that supplier payment is now due
-      transaction.approvedAt = new Date();
-      await transaction.save();
+      await updateTransaction(transaction.transactionId, {
+        noaStatus: 'signed',
+        status: 'approved',
+        paymentDue: true,
+        approvedAt: new Date().toISOString()
+      });
 
       // Generate signed NOA PDF and persist to S3 for long-term retrieval
       try {
         const partyDetails = await getNOAPartyDetails(transaction);
-        const signedPdfBuffer = await generateSignedNOAPdfBuffer(noaData, transaction, partyDetails);
+        const signedPdfBuffer = await generateSignedNOAPdfBuffer(effectiveNoa, transaction, partyDetails);
         const signedFileName = `NOA-${transaction.transactionId}-signed.pdf`;
         const uploadedNoaDoc = await uploadDocumentToS3({
           folder: `noa/${transaction.transactionId}`,
@@ -470,9 +482,10 @@ router.post('/:token/sign', async (req, res) => {
           body: signedPdfBuffer
         });
 
-        noaData.signedDocumentKey = uploadedNoaDoc.key;
-        noaData.signedDocumentFileName = signedFileName;
-        await noaData.save();
+        await updateNoa(effectiveNoa.noaId, {
+          signedDocumentKey: uploadedNoaDoc.key,
+          signedDocumentFileName: signedFileName
+        });
       } catch (s3Error) {
         console.error('Failed to generate/upload signed NOA PDF to S3:', s3Error);
       }
@@ -513,7 +526,7 @@ router.post('/:token/sign', async (req, res) => {
           html: `
             <h2>Signed NOA Details</h2>
             <p><strong>Transaction ID:</strong> ${transaction.transactionId}</p>
-            <p><strong>Buyer:</strong> ${transaction.buyerName} (${noaData.buyerEmail})</p>
+            <p><strong>Buyer:</strong> ${transaction.buyerName} (${effectiveNoa.buyerEmail})</p>
             <p><strong>Supplier:</strong> ${transaction.supplierName}</p>
             <p><strong>Invoice Number:</strong> ${transaction.invoiceNumber}</p>
             <p><strong>Invoice Amount:</strong> ${transaction.currency} ${transaction.invoiceValue?.toLocaleString?.() || transaction.invoiceValue}</p>
@@ -541,10 +554,10 @@ router.post('/:token/sign', async (req, res) => {
       success: true,
       message: 'NOA acknowledged successfully',
       data: {
-        noaId: noaData.noaId,
-        status: noaData.status, 
-        acknowledgedAt: noaData.acknowledgedAt || noaData.updatedAt,
-        signedAt: noaData.acknowledgedAt || noaData.updatedAt,
+        noaId: effectiveNoa.noaId,
+        status: effectiveNoa.status, 
+        acknowledgedAt: effectiveNoa.acknowledgedAt || effectiveNoa.updatedAt,
+        signedAt: effectiveNoa.acknowledgedAt || effectiveNoa.updatedAt,
         acknowledgedBy: fullName
       }
     });
@@ -562,7 +575,7 @@ router.post('/:token/sign', async (req, res) => {
 router.get('/:token/pdf', async (req, res) => {
   try {
     const { token } = req.params;
-    const noaData = await NOAModel.findOne({ noaId: token });
+    const noaData = await getNoaByToken(token);
 
     if (!noaData) {
       return res.status(404).json({
@@ -578,7 +591,7 @@ router.get('/:token/pdf', async (req, res) => {
       });
     }
 
-    const transaction = await TransactionModel.findOne({ transactionId: noaData.transactionId });
+    const transaction = await getTransactionById(noaData.transactionId);
     if (!transaction) {
       return res.status(404).json({
         success: false,
@@ -603,9 +616,10 @@ router.get('/:token/pdf', async (req, res) => {
           contentType: 'application/pdf',
           body: pdfBuffer
         });
-        noaData.signedDocumentKey = uploadedNoaDoc.key;
-        noaData.signedDocumentFileName = signedFileName;
-        await noaData.save();
+        await updateNoa(noaData.noaId, {
+          signedDocumentKey: uploadedNoaDoc.key,
+          signedDocumentFileName: signedFileName
+        });
       } catch (uploadError) {
         console.error('Failed to upload on-demand generated NOA PDF to S3:', uploadError);
       }
@@ -631,7 +645,7 @@ router.get('/status/:transactionId', async (req, res) => {
   try {
     const { transactionId } = req.params;
     
-    const transaction = await TransactionModel.findOne({ transactionId });
+    const transaction = await getTransactionById(transactionId);
     if (!transaction) {
       return res.status(404).json({
         success: false,
@@ -640,7 +654,7 @@ router.get('/status/:transactionId', async (req, res) => {
     }
 
     // Find NOA data
-    const noaData = await NOAModel.findOne({ transactionId });
+    const noaData = await getNoaByTransactionId(transactionId);
 
     res.json({
       success: true,

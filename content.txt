@@ -1,0 +1,1434 @@
+1.1 In this Agreement, the following terms shall have
+the following meanings:
+“Account Receivable” or “Accounts Receivable” means the
+right to receive any and all present and future payments of
+money due and payable, whether due now or payable in the
+future (including any entitlement to late payment interest
+whether by contract or implied by law) as a result of an
+Underlying Relationship, whether or not earned by
+performance. If the amount due under an Invoice is payable
+in instalments, each such instalment shall be treated as an
+individual Account Receivable.
+“Addendum” means an addendum to this Agreement
+executed in writing by both parties.
+“Advance Rate” means a percentage of the face value of the
+Account Receivable (as may be adjusted by MODIFI from
+time to time). The applicable Advance Rate will be disclosed
+to the Seller on the MODIFI Platform or API (as applicable).
+“Advance Rate Amount” means with respect to an Account
+Receivable the amount due with respect to such Account
+Receivable multiplied by the Advance Rate.
+“Adverse Claim” means any Security Interest, netting, set-off,
+claim, defence or counterclaim, prohibition on assignment,
+negative pledge, including claims related to shipment,
+delivery, damage, defect, performance, failure to meet
+specifications, or failure to meet expressed or implied
+warranties.
+“Agreement” means the Framework Agreement including
+these receivables purchase terms and conditions and any
+applicable Schedule.
+“Applicable Law” means all existing and future laws, rules,
+regulations, statutes, treaties, codes, ordinances, Permits,
+certificates, orders and licenses of and interpretations by, any
+governmental authority, and applicable judgments, decrees,
+injunctions, writs, orders or similar action of any court,
+administrative, judicial or quasi-judicial tribunal or agency of
+competent jurisdiction (including those relating to currency
+exchange controls, to competition, privacy issues, and the
+creation, perfection and priority of any company charges or
+other securities given by a Person of whatsoever nature or
+any law, rule, regulation, statute, treaty, code or ordinance
+having a similar purpose in any jurisdiction), to the extent
+that the foregoing are applicable to either or both of the
+parties hereto or a relevant Buyer.
+“Business Day” means a day other than a Saturday, Sunday,
+a public holiday or other holiday in Amsterdam on which the
+banks in Amsterdam are open for general business.
+“Buyer” means a purchaser of goods and/or services from the
+Seller.
+“Collect” and “Collected” means with respect to an Account
+Receivable, that MODIFI has received the amount due with
+respect to such Account Receivable provided that an
+Account Receivable will not have been deemed to be
+Collected for the purposes of determining whether any
+Deferred Purchase Price should be paid until MODIFI has
+been able to confirm that it has received a proportion of the
+due amount with respect to such Account Receivable which
+is greater than the sum of (i) the Initial Purchase Price, (ii) the
+Transaction Fee with respect to such receivable, (iii) the
+Reference Rate with respect to such receivable; (iv) the
+Factoring Fee with respect to such receivable, (v) the
+Processing Fee(s) with respect to such receivable, and (vi) any
+other amounts owed by the Seller to MODIFI.
+“Deferred Purchase Price” means with respect to an
+Account Receivable or Portfolio the higher of (i) zero; and (ii)
+the amount actually Collected with respect to such Account
+Receivable or Portfolio (as applicable) less the Initial
+Purchase Price paid with respect to such Account Receivable
+or Portfolio, any payable Fees (including Late Fees and
+additional costs and expenses incurred by MODIFI with
+respect to collection of the relevant Account Receivable or
+Portfolio) not yet deducted from the Initial Purchase Price
+and any amounts payable by the Seller to MODIFI.
+“Designated Employee” means an employee of Seller who is
+authorised by the Seller to access and use the Platform on its
+behalf.
+“Due Date” means, with respect to an Account Receivable,
+the day on which the payment of the Buyer is due according
+to the Invoice and/or the underlying purchase or service
+contract between Seller and the Buyer.
+“Employees” means employees, officers, directors,
+shareholders, controlling Persons, agents, representatives,
+advisors and consultants of a party.
+“Event of Insolvency” shall be deemed to have occurred
+with respect to any Person if:
+(a) such Person stops or suspends or threatens to stop
+or suspend payment or all or a material part of its
+debts, or is unable to pay its debts when due; or
+(b) such Person begins negotiations for, takes any
+proceedings concerning, proposes or makes any
+agreement for the deferral, rescheduling or other
+readjustment of its debts, or a moratorium is agreed
+or declared in respect of or affecting all or a material
+part of the debts of such Person; or
+(c) a petition is filed or presented in respect of a Person
+in any court or before any agency alleging or for the
+bankruptcy, winding-up or other insolvency of that
+Person, or seeking any protection of the court,
+re-organisation, management, composition,
+scheme of arrangement, re-adjustment, liquidation,
+2
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+administration, administrative receivership,
+examinership or similar relief (other than a solvent
+reconstruction, amalgamation or reorganisation)
+under present or future statute, law or regulations
+applicable to such Person; or
+(d) a composition, scheme of arrangement,
+compromise or other similar arrangement has been
+approved and made binding on a Person and all of
+that Person’s creditors; or
+(e) any step is taken to enforce security over or a
+distress, execution or other similar process is levied
+or served against the whole or a substantial part of
+the assets or undertaking of such Person, including
+the appointment of a receiver, administrative
+receiver, manager or similar officer to enforce that
+security in respect of all or any part of the property
+or undertaking of such Person; or
+(f) a petition is presented, order made, meeting
+convened, resolution passed or any step is taken by
+any person with a view to the winding up, business
+rescue or dissolution of such Person; or
+(g) receiver or manager, liquidator, trustee,
+administrator, or other similar official is appointed
+over a Buyer, whether or not the appointment has
+been made by a court or other similar tribunal but
+excluding any appointment which does not affect
+MODIFI’s rights as a creditor of the Buyer; or
+(h) any event or circumstance occurs which under the
+law of any relevant jurisdiction has an analogous or
+equivalent effect to any of the events listed above.
+“Factoring Fee” has the meaning given to it in Clause 2.3
+(Factoring Fee) of the Framework Agreement and shall be
+deducted from the Initial Purchase Price.
+“Fees” mean the Transaction Fee, the Reference Rate, the
+Factoring Fee, the Processing Fee, the Set-Up Fee and the
+Late Fee (if applicable).
+“Foreign Public Buyer” means an entity located outside the
+Netherlands whose creditworthiness is equal to that of the
+government in the country in which it is located due to its
+statutory position or a commitment from such government
+with regard to the financial support of such entity.
+“Initial Purchase Price” means, with respect to an Account
+Receivable, the Advance Rate Amount of that Account
+Receivable, less the applicable Fees.
+“Intellectual Property” means patents, trade marks, service
+marks, rights (registered or unregistered) in any designs,
+applications for any of the foregoing, trade or business
+names, copyright (including rights in computer software)
+and topography rights; know-how, trade secrets, inventions,
+secret formulae and processes, lists of suppliers and Buyers
+and other proprietary knowledge and information; internet
+domain names; rights protecting goodwill and reputation;
+database rights, moral rights and all rights and forms of
+protection having equivalent effect, anywhere in the world.
+“Invoice“ means, in respect of each Account Receivable, a
+copy of the relevant invoice including details of the Seller,
+details of the Buyer, invoice number, the amount
+denominated in the relevant currency, the issue date and the
+Due Date.
+“IPP Payment Date” means the date falling up to three
+Business Days following acceptance of an offer by Modifi in
+accordance with Clause 3 (Sale and Purchase of Accounts
+Receivable).
+“Late Fee” has the meaning given to it in Clause 11.3.
+“Late Fee Start Date” means:
+(a) if the Due Date falls five days or more before the last
+day of the applicable Payment Term, the first day
+immediately following the Payment Term; and
+(b) if the Due Date falls on a day that is less than 5 days
+before the last day of the applicable Payment Term ,
+the Late Fee Start Date shall be the 5th day after the
+end of the Payment Term.
+“Payment Term” has the meaning given to it in Clause 2.1
+(Payment Terms) of the Framework Agreement.
+“Permits” means any authorisation, consent, approval,
+license, ruling, permit (including any export or import
+permit), tariff, rate, certification, exemption, filing, variance,
+claim, order, judgment, decree, publication, notice to,
+declaration of or with, or registration by or with, any
+governmental authority.
+“Person” means any natural person, sole proprietorship,
+business trust, firm, joint venture, partnership,
+unincorporated organisation, association, enterprise, limited
+liability company, limited liability partnership, public benefit
+corporation, trust or other legal entity or organisation, or any
+government (whether central, federal, state, county, city,
+municipal or otherwise).
+“Platform” means the online systems provided by MODIFI
+and made available to Seller to facilitate the purchase of
+Accounts Receivable hereunder.
+“Political Risk” means any of the following:
+(a) the non-payment of all or part of an undisputed
+Transferred Account Receivable owed at any time
+by a Buyer which is a Foreign Public Buyer to the
+Seller on the expiry of 30 days;
+(b) the unjustified and formal refusal by a Buyer which
+is a Foreign Public Buyer to accept goods from the
+Seller with respect to a Transferred Account
+Receivable;
+3
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+(c) the direct prevention of the payment of an Account
+Receivable to the Seller or MODIFI by a Buyer or
+performance of the sale and/or services contract by
+the Seller as a result of any of the following events:
+(i) the occurrence in the country in which the
+Buyer is located of war (whether declared
+or not), invasion, act of foreign enemy
+hostilities, civil war, insurrection, rebellion,
+riot, revolution and/or military or usurped
+power;
+(ii) political events, economic difficulties,
+currency shortages, devaluations or
+fluctuations, or legislative or administrative
+measures in the Buyer's country which
+prevent or delay the transfer of amounts by
+the Buyer;
+(iii) a general moratorium, decreed by the
+government of the Buyer's country or of
+any country through which payment must
+be effected or other transfer restrictions
+where there is a decree by the government
+of the Buyer’s country imposing
+restrictions on currency transfer;
+(iv) cyclone, flood, earthquake, volcanic
+eruption or tidal wave or other forms of
+natural disaster or force majeure;
+(v) the passing of a decree by the government
+in the country in which the Buyer is
+located, exonerating him from paying the
+additional sum due if there is a difference
+between the amount deposited in the
+local currency on the date of the deposit or
+on the date of completion of the transfer
+formalities, and the amount due to be
+paid;
+(vi) inconvertibility of the currency of the
+Buyer’s country where the debt is payable
+in a currency other than the currency of
+the Buyer’s country;
+(vii) the passing of a decree by the government
+in the country in which the Buyer is
+located preventing the Buyer paying for
+receivables assigned to a third party; or
+(viii) the introduction of import or export
+restrictions or the cancellation of import or
+export licenses or other governmental
+measures which prevent performance of
+the contract.
+"Portfolio" means a portfolio of Accounts Receivable
+purchased by MODIFI from the Seller and identified by
+MODIFI in its discretion as forming part of the relevant
+Portfolio.
+“Post” or “Posted” means the point in time at which, on
+provision of an input to the Platform by Seller, a Buyer or
+MODIFI, the initial processing of such input by the Platform is
+complete. Reference in this Agreement to a Seller, a Buyer or
+MODIFI "Posting" information, a notice, or an assurance
+includes the action of the Platform to initially process such
+data. The input of an Invoice will be considered Posted when
+the Invoice is received by the Platform and initial processing
+of such Invoice is completed, such that the Invoice is
+available to be viewed by Seller and MODIFI on the Platform.
+“Processing Fee” means for each Processing related to an
+Account Receivable in
+or such other amount as will be displayed on the
+Platform in respect of Processing of Accounts
+Receivable in other currencies, and which shall be
+deducted from the Initial Purchase Price and the
+Deferred Purchase Price. The Processing Fee may be
+increased with
+or Indian Sellers selecting the option “Do not convert
+to INR” on the MODIFI Platform.
+"Processing" means MODIFI processing an Initial Purchase
+Price and/or Deferred Purchase Price for payment to the
+Seller in accordance with Clause 4.
+“Purchase Price” means with respect to an Account
+Receivable the sum of the Initial Purchase Price and the
+Deferred Purchase Price.
+“Reference Rate” has the meaning given to it in Clause 2.6
+(Reference Rate) of the Framework Agreement. The
+4
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+USD 25.00
+EUR 50.00
+EUR 20.00
+CAD 60.00
+USD 60.00
+CAD 0.00
+GBP 20.00
+GBP 50.00
+Reference Rate will not be adjusted and the Purchase Price
+will not be increased where the applicable Account
+Receivable is paid prior to the end of the Payment Term.
+“Related Rights” means, with respect to any Account
+Receivable, all of the Seller’s right, title and interest in, to and
+under:
+(a) all security interests, hypothecs, reservations of
+ownership, Security Interests, sureties or other
+Adverse Claims and property subject thereto from
+time to time purporting to secure payment of such
+Account Receivable, whether pursuant to the
+contract related to such Account Receivable or
+otherwise, together with all financing statements,
+registrations, hypothecs, charges or other similar
+filings or instruments against an Buyer and all
+security agreements creating any collateral securing
+such Account Receivable;
+(b) all guarantees, letters of credit, insurance and other
+agreements or arrangements of whatever character
+from time to time supporting or securing payment
+of such Account Receivable whether pursuant to
+the contract related to such Account Receivable or
+otherwise;
+(c) all bills of exchange, promissory notes, purchase
+orders, invoices (including interim invoices) and
+delivery records, relating to such Account
+Receivable, the applicable contract and the related
+Buyer;
+(d) all contracts or other agreements or documents to
+the extent that they evidence or secure such
+Account Receivable;
+(e) all unilateral rights to determine legal relationships,
+whether ancillary or not, in particular termination
+rights and the rights to draw balances, to the extent
+that such unilateral rights are not included in the
+definition of “Account Receivable”; and
+(f) all collections and proceeds of the foregoing.
+“Repurchase Price” means with respect to an Account
+Receivable the sum of: (i) the aggregate Purchase Price
+already paid by MODIFI for such Account Receivable, (ii) plus
+the applicable Fees (each expressed as a positive number)
+and (iii) less any Collections received by MODIFI with respect
+to such Account Receivable.
+“Schedule” means a schedule to this Agreement as is
+applicable pursuant to Clause 12.
+"Security Interest" means any Security Interest, mortgage,
+security interest, pledge, title retention, charge, set-off right,
+offset, reduction, recovery, claw-back, abatement, deferral,
+withholding, reduction, financing statement, or other
+encumbrance, or other right, dispute or claim of any Person.
+“Seller Account” means the bank account established,
+designated and maintained by Seller, details of which are set
+out in the Framework Agreement, or such other account as
+may be notified by Seller to MODIFI with 5 Business Days’
+notice in writing from time to time.
+“Set-Up Fee” has the meaning given to it in Clause 2.5
+(Set-Up Fee) of the Framework Agreement and which shall
+be deducted from one or more (at MODIFI’s discretion)
+Purchase Price payments by MODIFI to the Seller. MODIFI is
+entitled to deduct a Set-Up Fee expressed in one currency
+from a Purchase Price expressed in another currency by
+converting for such purpose (the relevant part of) the Set-Up
+Fee into the currency of the Purchase Price at the time of
+such Purchase Price payment using the exchange rate
+obtained by MODIFI from a third party exchange rate data
+provider of MODIFI’s choice.
+“State of Default” means the situation of a Buyer resulting
+from the occurrence of:
+(a) an amount being overdue by the Buyer past the
+expiry of 30 days; or
+(b) any dishonour or non-payment of a bill of exchange,
+promissory note, cheque or direct debit upon its
+first presentation for payment, in each case, by the
+Buyer; or
+(c) an Event of Insolvency in relation to such Buyer; or
+(d) a Political Risk with respect to such Buyer.
+“Transaction Fee” has the meaning given to it in Clause 2.2
+(Transaction Fees) of the Framework Agreement and shall
+be deducted from the Initial Purchase Price. The Transaction
+Fee will not be adjusted and the Purchase Price will not be
+increased where the applicable Account Receivable is paid
+prior to the end of the Payment Term.
+“Transfer”, “Transferred” or “Transfers” means the transfer or
+purported transfer of Seller's entire right, title and interest in
+and to an Account Receivable, free and clear of any Adverse
+Claim; and/or when used with reference to MODIFI means
+that MODIFI has notified the Seller of the purchase of the
+Account Receivable to Seller pursuant to this Agreement.
+“Underlying Relationship” means an arm’s length business
+relationship between a Buyer and Seller.
+1.2 Interpretation
+In this Agreement where the context requires:
+1.2.1 words and phrases defined in the Companies Act
+2006 shall have an equivalent meaning;
+1.2.2 reference to “this Agreement” or to any other
+agreement or document referred to in this
+Agreement means this agreement or such other
+agreement or document as amended, varied,
+supplemented, renewed, extended, modified or
+5
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+novated from time to time and includes the
+exhibits, which shall have effect as if set out in this
+Agreement or such other agreement or document;
+1.2.3 reference to a Clause is a reference to a clause of
+this Agreement;
+1.2.4 Clause headings are inserted for convenience only
+and are not to be considered part of this Agreement
+or used to define, limit or construe the scope of any
+term or provision of this Agreement;
+1.2.5 the use of singular or plural number, or masculine,
+feminine or neuter gender shall include all other
+appropriate references;
+1.2.6 any phrase introduced by the words “including”,
+“include”, “in particular” or any similar expression
+shall be construed as illustrative only and shall not
+be construed as limiting the scope of any preceding
+words;
+1.2.7 reference to any party means, unless the context
+otherwise requires, a party to this Agreement and
+includes its successors and permitted assigns;
+1.2.8 reference to “writing” shall include typewriting,
+printing, facsimile, email, electronic
+communications made through the Platform and
+other modes of representing or reproducing words
+in a legible form;
+1.2.9 reference to “assets” of any Person shall be
+construed as a reference to the whole or any part of
+its business, undertaking, property, assets, rights
+and revenues (including any right to receive
+revenues);
+1.2.10 reference to “consent” includes an approval,
+authorisation, exemption, filing, licence, order,
+permission, recording or registration (and a
+reference to obtaining consent shall be construed
+accordingly); and
+1.2.11 references to any statute or statutory provisions
+include a reference to those provisions as amended
+or re-enacted or as their application is modified by
+other provisions from time to time and any
+reference to a statutory provision shall include any
+subordinate legislation made from time to time
+under that provision.
+1.3 Deferred Purchase with respect to Portfolios
+MODIFI may determine that an Account Receivable forms
+part of a Portfolio to allow efficient payment of Deferred
+Purchase Price on a weekly or monthly basis. The Deferred
+Purchase Price with respect to a Portfolio shall take into
+account all fees and other amounts owed to MODIFI by the
+relevant Seller with respect to Accounts Receivable in the
+relevant Portfolio.
+2. OFFER
+2.1 Seller may on the Platform or through API provide
+information with regards to Accounts Receivable
+that it wishes to offer for sale to MODIFI, in the
+manner prescribed by the Platform. MODIFI will
+show on the Platform or through API the applicable
+Advance Rate and Fees for any purchase of such an
+Account Receivable. The aggregate of the
+Transaction Fee, Factoring Fee and Reference Rate
+shall not be less than 0.75 percent of the face value
+of each purchased Account Receivable per each 30
+days of a Payment Term.
+2.2 Seller may offer an Account Receivable for sale to
+MODIFI by Posting the related Invoice onto the
+Platform and by doing so, the Seller indicates its
+acceptance of the Fees and any other purchase
+conditions.
+2.3 Once an Invoice is Posted, MODIFI may confirm
+either via the Platform or directly with the relevant
+Buyer that the relevant Invoice and any other details
+provided by the Seller are correct.
+3. SALE AND PURCHASE OF ACCOUNTS
+RECEIVABLE
+3.1 MODIFI may, but shall not be obliged to, accept an
+offer made by the Seller in accordance with Clause 2
+(Offer) by indicating its acceptance via the Platform.
+3.2 On notification of acceptance by MODIFI, Seller shall
+have sold and assigned absolutely all of its present
+and future right, title and interest in, to and under
+the relevant Account Receivable and all Related
+Rights in relation thereto to MODIFI.
+3.3 On purchase of an Account Receivable MODIFI may
+notify the relevant Buyer of such purchase either
+directly or via the Platform and provide account
+details for payment to the Buyer and Seller
+authorises MODIFI to send such notification in the
+name of Seller.
+3.4 Except for the Transfers to MODIFI hereunder, Seller
+shall not after acceptance by MODIFI of an offer to
+purchase an Account Receivable:
+3.4.1 sell or assign or otherwise dispose of such Account
+Receivable; or
+3.4.2 create any Adverse Claim or suffer to exist any
+Adverse Claim arising as a result of its action or
+inaction upon or with respect to such Account
+Receivable, it being understood and agreed in the
+case of Clause 3.4.1 and 3.4.2 that Seller is not
+intending thereby to have or retain any right, title or
+interest in or to any such Account Receivable.
+3.5 If a State of Default occurs in relation to the relevant
+Buyer or some other material adverse event arises
+6
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+in relation to the Buyer or the Seller as determined
+by MODIFI in its reasonable discretion, prior to
+MODIFI making payment of the Initial Purchase
+Price for an Account Receivable, then MODIFI shall
+be released from its obligation to pay the Initial
+Purchase Price to Seller and shall instead only be
+required to pay the Deferred Purchase Price.
+3.6 For the avoidance of doubt and notwithstanding
+Clause 11.3, it is expressly agreed by the parties that
+the Seller shall not be liable for the non-payment of
+Invoices by a Buyer and/or Account Receivable not
+Collected by MODIFI from the Buyer where such
+non-payment arises as a result of the insolvency or
+other credit related inability of the Buyer to pay the
+relevant amount (but not where such non-payment
+arises as a result of any other factor including but
+not limited to disputes with the Seller, set-off,
+counterclaim, fraud or any Political Risk in respect of
+a Buyer).
+3.7 MODIFI may require Seller to incorporate the
+following information into an Invoice in relation to
+an Account Receivable which MODIFI may
+purchase hereunder or otherwise give notice to the
+relevant Buyer of such information: the bank
+account information of MODIFI for receiving the
+amount due as well as a notice that the Account
+Receivable has been transferred to MODIFI and that
+payment must be made to MODIFI (and not to the
+Seller). In addition, MODIFI may require that Seller
+incorporate certain terms into its contracts with
+Buyers as a condition to purchasing Accounts
+Receivable arising under such contracts.
+4. PAYMENT OF PURCHASE PRICE
+4.1 The consideration for the Transfer of an Account
+Receivable is the Purchase Price.
+4.2 MODIFI shall pay or procure payment of the
+relevant Initial Purchase Price to Seller on the IPP
+Payment Date, subject to any set-off in accordance
+with Clause 16.12.
+4.3 Within 2 Business Days of the date on which an
+Account Receivable is Collected and clearly
+identified as such to the satisfaction of MODIFI or as
+soon as reasonably practicable thereafter if it is not
+reasonably practicable to make the relevant
+payment within 2 Business Days, subject to any
+set-off by MODIFI, MODIFI shall pay the applicable
+Deferred Purchase Price to the Seller, provided that
+where an Account Receivable forms part of a
+Portfolio MODIFI shall determine and pay the
+Deferred Purchase Price with respect to all
+Accounts Receivable in such Portfolio on a weekly
+or monthly basis (as determined by MODIFI in its
+discretion) based on the the collections Collected
+with respect to such Portfolio (and clearly identified
+as such to the satisfaction of MODIFI) in the period
+ending 2 Business Days prior to the date of such
+payment of Deferred Purchase Price.
+4.4 If any payment of the Purchase Price falls due on a
+day which is not a Business Day, it shall be made on
+the next day which is a Business Day but its amount
+shall not be adjusted as a consequence.
+4.5 Seller shall provide to MODIFI information relating
+to the Seller Account and such other information as
+MODIFI reasonably requires to settle the payment
+of Purchase Price.
+4.6 All payments to be made under this Agreement
+shall be made in the currency of the relevant
+Account Receivable or otherwise in the currency
+specified by MODIFI.
+4.7 If any payments are made erroneously, including
+(without limitation) a payment to an incorrect payee
+or in an incorrect amount, Seller shall provide all
+commercially reasonable co-operation to MODIFI as
+may be necessary to correct such error as promptly
+as possible, including returning any incorrect
+payments received by it. If at any time Seller
+receives any payments with respect to a Transferred
+Account Receivable, Seller shall receive such
+payments in trust for the benefit of MODIFI,
+segregate such payments from its other funds, and
+deliver to MODIFI, in the same form as so received
+with all necessary endorsements, all such payments
+received as soon as practicable, but in no event later
+than two (2) Business Days after receipt thereof by
+Seller.
+4.8 Seller shall be responsible for the payment of all
+federal, state, local, and foreign sales, use, excise,
+utility, gross receipts, value added, stamp duty or
+other tax or duty imposed by any authority related
+to this Agreement, Seller’s use of the Platform, and
+receipt of the Purchase Price and any other
+amounts received by Seller as a result of Seller’s use
+of the Platform, other than taxes relating to the
+income of MODIFI or Buyer.
+5. FURTHER ASSURANCES
+5.1 Seller undertakes in respect of each Account
+Receivable Transferred pursuant to this Agreement
+not to seek payment of such Account Receivable
+from Buyer other than to pay MODIFI.
+5.2 Seller hereby irrevocably appoints MODIFI the agent
+of Seller to execute and deliver in Seller’s name,
+such deeds, agreements and documents, to
+complete or endorse such cheques and other
+instruments, to institute or defend such
+proceedings and to perform such other acts as
+MODIFI may consider necessary to secure the
+performance of any of Seller’s obligations under this
+Agreement, including the notification of the Buyer
+7
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+in relation to the purchase of an Account
+Receivable.
+5.3 Seller shall at the request of MODIFI execute or
+procure the execution of such documents and do or
+procure the doing of such acts and things as
+MODIFI may reasonably require for the purpose of
+giving effect to the assignment of an Account
+Receivable to MODIFI in accordance with the terms
+of this Agreement, and in the event that any such
+assignment is not effective, Seller shall forthwith
+remit any monies received to and hold any rights
+received in relation to such Account Receivable on
+trust for MODIFI until such time that an assignment
+can be effected.
+5.4 In the event that a Buyer fails to pay MODIFI any
+sum due and payable by Buyer pursuant to a
+Transferred Account Receivable, Seller shall give to
+MODIFI all such information and assistance as
+MODIFI shall reasonably require pursuant to any
+debt recovery proceedings, including instructing
+such attorneys, counsel or other professional
+advisors as MODIFI may nominate to act on behalf
+of Seller but in accordance with MODIFI’s
+instructions.
+6. SELLER REPRESENTATIONS AND WARRANTIES
+6.1 Seller represents and warrants to MODIFI on each
+day that:
+6.1.1 the correct legal name of Seller, as it appears in
+Seller’s memorandum, articles or certificate of
+incorporation, or other publicly registered
+organisational document, Seller’s jurisdiction of
+incorporation or organisation, its employer
+identification number, tax registration number and
+the organisational identification number issued by
+the jurisdiction of formation are as provided when
+Seller registered to use the Platform or as
+subsequently notified to MODIFI in writing;
+6.1.2 Seller is duly organised, validly existing and in good
+standing under the laws of the jurisdiction of its
+organisation and is duly qualified and in good
+standing in all relevant jurisdictions;
+6.1.3 Seller has the power, authority and approvals to
+enter into and perform its obligations under this
+Agreement and all corporate, regulatory and other
+actions required to authorise the execution, delivery
+and performance of this Agreement and the
+performance of its obligations hereunder have been
+duly taken;
+6.1.4 this Agreement is the legal, valid and binding
+obligation of Seller, enforceable against Seller in
+accordance with its terms; and the acceptance by
+Seller of an offer from MODIFI to purchase an
+Account Receivable will give rise to a legal, valid and
+binding obligation of Seller in accordance with this
+Agreement with respect to the Transfer of the
+related Account Receivable;
+6.1.5 each Account Receivable Transferred or to be
+Transferred hereunder:
+6.1.5.1 is a legal, valid, enforceable and assignable
+obligation of the relevant Buyer;
+6.1.5.2 is solely owned by Seller who has the right to sell,
+assign and transfer such Account Receivable;
+6.1.5.3 is and will remain free from all Adverse Claims and
+all other Security Interests of any kind and is not
+subject to any dispute;
+6.1.5.4 is an amount due under an Invoice that has been
+issued to the Buyer not more than 30 days after the
+relevant goods or services were despatched;
+6.1.5.5 is an amount due under an Invoice that has been
+issued to the Buyer not more than 14 days prior to
+being Posted on the Platform by the Seller;
+6.1.5.6 save in the case of an Account Receivable that has
+CAD as a payment term, relates to a supply of goods
+or services which has been fully and correctly
+completed and such Account Receivable is not
+contingent on further goods or services being
+supplied to the Buyer;
+6.1.5.7 is originated in the ordinary course of Seller’s
+business;
+6.1.5.8 arises from an Underlying Relationship that does
+not violate Applicable Law;
+6.1.5.9 in the case of an Account Receivable Transferred or
+to be Transferred hereunder that has CAD as a
+payment term, is an Account Receivable in respect
+of which (1) the conditions set out In paragraph 2 of
+Schedule 2 have been complied with; (2) the
+Documents delivered to the Seller constitute a full
+and correct pack of all of the Documents that need
+to be delivered to the Buyer when the Buyer pays
+the Account Receivable; (3) all necessary steps to
+supply the relevant goods or services to which the
+Account Receivable relates have been and will be
+fully, correctly and punctually taken; and (4) the Due
+Date is not contingent on the Documents being
+delivered;
+6.1.6 in so far as Seller is aware, each Buyer in relation to
+which it posts an Invoice is duly organised, validly
+existing and in good standing under the laws of the
+jurisdiction of its organisation and is duly qualified
+and in good standing in all relevant jurisdictions;
+6.1.7 in so far as Seller is aware, each Buyer in relation to
+which it posts an Invoice has the power to enter into
+and perform its obligations under the contract
+giving rise to the relevant Account Receivable and
+8
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+all corporate and other actions required to authorise
+the execution, delivery and performance of such
+contract and the performance of its obligations
+thereunder have been duly taken;
+6.1.8 no Buyer nor any affiliate or group company of any
+Buyer in relation to which Seller posts an Invoice is
+subject to a State of Default with Seller at the time
+the Invoice is posted and each such Buyer, affiliate
+or group company has no debts outstanding to the
+Seller that are more than 30 days overdue;
+6.1.9 no Buyer is an affiliate of the Seller during the term
+of this Agreement and so long as any Account
+Receivable owed by such Buyer purchased by
+MODIFI remains outstanding;
+6.1.10 information Posted to the Platform that is
+purported to be Posted by Seller is accurate and
+complete;
+6.1.11 each Person who purports to make an entry in the
+Platform on behalf of Seller has been duly
+authorised by Seller and each entry on the Platform
+purporting to be by Seller is duly authorised and is
+binding on Seller;
+6.1.12 all information provided by or on behalf of Seller to
+MODIFI was and is true and correct in all material
+respects and was and is not incomplete by omitting
+to state any material fact necessary to make such
+information not misleading in any material respect
+in light of the circumstances under which such
+information was provided;
+6.1.13 neither the Seller nor, so far as it is aware, any Buyer
+or affiliate or group company of any Buyer in
+relation to which it posts an Invoice is subject to any
+litigation or investigation which has not been
+disclosed to MODIFI and would materially prejudice
+MODIFI’s position;
+6.1.14 neither the Seller nor, so far as it is aware, any Buyer
+or affiliate or group company of any Buyer in
+relation to which it posts an Invoice is involved in
+any corrupt practice, breach of sanctions or activity
+which violates Applicable Law in any relevant
+jurisdiction;
+6.1.15 the goods and/or services purchased by a Buyer
+which give rise to each Account Receivable do not
+include arms, weapons, weapon components or
+military equipment or any goods or services the
+supply or receipt of which is contrary to Applicable
+Law;
+6.1.16 the goods and/or services purchased by a Buyer
+which give rise to each Account Receivable
+Transferred or to be Transferred hereunder are
+supplied from the jurisdiction described in the
+address of Seller that is stored in connection with
+the user ID and password which gives Seller access
+to the Platform; and
+6.1.17 it shall comply with all Applicable Law relative to the
+conduct of its obligations under this Agreement
+and its use of the Platform.
+6.2 No representations or warranties, whether express
+or implied, including the implied warranties of
+merchantability and fitness for a particular purpose,
+are made by MODIFI with respect to the Platform.
+6.3 If Seller breaches any representation or warranty
+contained in this Agreement, MODIFI may demand
+that Seller repurchase the affected Transferred
+Accounts Receivable for the aggregate amount of
+the Repurchase Price with respect thereto and
+Seller shall repurchase such Transferred Accounts
+Receivable within 3 Business Days of such demand.
+The repurchase requirement contained in this
+Clause 6.3 is without prejudice to any other rights of
+MODIFI.
+7. SELLER COVENANTS
+7.1 Seller shall maintain comprehensive records of all
+transactions entered into by it using the Platform
+and otherwise with respect to its obligations and
+activities in connection with this Agreement,
+including (without limitation) information with
+respect to each Underlying Relationship (or
+associated disputes) to which it is a party (including
+contracts and amendments, variations or waivers to
+such contracts), and with respect to compliance of
+such transactions with applicable laws and
+regulations (Records). Seller shall retain each
+Record required to be maintained under this Clause
+7 until the later of: (i) the date falling one year after
+this Agreement is terminated and (ii) such later date
+as may be required by law or regulation.
+7.2 Seller shall provide MODIFI with copies of any
+Records as MODIFI may require in order to enforce
+its rights under Accounts Receivable which it has
+purchased and/or to comply with an order,
+instruction or request from any authority of
+competent jurisdiction, or to ensure compliance
+with or in connection with the performance of the
+terms of this Agreement and/or to obtain, maintain
+or claim under any relevant insurance policy.
+7.2.1 Seller shall provide to MODIFI or procure that
+MODIFI is able to source independently the
+following documents relating to Buyers in respect
+of which Seller has posted an Invoice:
+7.2.2 any and all contracts (including variations,
+amendments and waivers relating thereto) with
+such Buyers;
+7.2.3 details of any disputes with such Buyers;
+9
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+7.2.4 a statement of all outstanding Invoices issued by
+the Seller to that Buyer (whether or not offered to
+MODIFI); and
+7.2.5 any other documents reasonably requested by
+MODIFI.
+7.3 Seller shall provide to MODIFI as soon as they are
+available and via the Platform:
+7.3.1 (i) at the latest within six months after the last day of
+its financial year, its audited annual financial
+statements, provided that if its annual financial
+statements are not required to be audited under
+Applicable Law, its unaudited annual financial
+statements prepared by an independent
+professional adviser shall be provided to MODIFI
+and (ii) any other audited and unaudited published
+financial statements, at the latest within six months
+after the last day of the relevant reporting period;
+7.3.2 at the latest within 45 days after the date of closure
+of each quarterly period of each of its financial years
+(such date, the Quarterly Reporting Date),
+quarterly financial updates containing such
+financial information in respect of the Seller as may
+be required by MODIFI, including at a minimum (i) a
+profit and loss statement of the Seller with a
+monthly breakdown of the financial year to the
+Quarterly Reporting Date, (ii) a balance sheet and
+ledger accounts per the Quarterly Reporting Date
+and (iii) an overview of each of the Seller's three
+most significant bank accounts (in respect of value
+of transactions and amounts standing to the credit
+or debit of such accounts) per the Quarterly
+Reporting Date, in the form of a PDF copy of an
+extract from an online banking portal, reflecting at a
+minimum names of payers and payees, transaction
+dates, transactions amounts, payment purposes
+and amounts standing to the credit or debit of such
+accounts per the first date of the relevant quarter
+and the Quarterly Reporting Date (if supported by
+the relevant banking system);
+7.3.3 its constitutional documents including any
+resolutions and/or amendments relating thereto;
+7.3.4 details of any insolvency proceedings, litigation or
+regulatory investigation to which it is subject to the
+extent these can be disclosed without violating
+Applicable Law;
+7.3.5 in relation to any Buyer from whom MODIFI is owed
+money for outstanding Accounts Receivable
+purchased from the Seller and in relation to any
+Buyer that owes money for Accounts Receivable
+offered hereunder, the details of any disputes with
+and details of any known State of Default of such
+Buyer; and
+7.3.6 details of any credit notes, set-off or rebates which
+are or may be applied by any Buyer in relation to
+Accounts Receivable (including trading on contra,
+volume sale discounts etc.) or other circumstance
+which may lead to a Buyer being entitled to pay less
+than the full amount of an Invoice (e.g. goods sold
+on consignment), in each case where the Seller has
+sold or has offered for sale to MODIFI an Account
+Receivable owed by such Buyer which is
+outstanding.
+7.4 Seller shall not directly or indirectly waive or vary
+the terms of any Account Receivable which it has
+sold to MODIFI.
+7.5 Seller shall assist MODIFI and any agent appointed
+by MODIFI to identify amounts received in relation
+to Accounts Receivable which it has sold to MODIFI.
+7.6 Seller shall not sell further goods or services to a
+Buyer for so long as that Buyer or any affiliate or
+group company of that Buyer is in a State of Default
+with respect to Accounts Receivable which have
+been Transferred to MODIFI.
+8. NO ASSUMPTION OF SUPPLIER LIABILITIES
+Notwithstanding anything in this Agreement to the
+contrary, MODIFI does not assume and will not be
+deemed to assume any obligations, undertakings,
+liabilities or responsibilities of Seller to a Buyer or
+any other Person, all of which shall remain with
+Seller.
+9. CONDUCTING BUSINESS THROUGH THE
+PLATFORM
+The parties consent to the communication and
+delivery of elections and other communications and
+the creation of binding contracts, including
+variations of this Agreement, through the Platform,
+even though such actions are by electronic means
+rather than in writing on paper. The parties agree
+that such actions shall be valid and binding
+obligations of the parties, as if such actions had
+been taken in writing on paper. Each party hereby
+waives any claim or defence that the elections,
+contracts and other communications are not
+binding or enforceable or do not have their
+intended effect as a result of their being
+communicated electronically rather than in writing
+on paper.
+10. SURVIVAL
+Notwithstanding anything contained in this
+Agreement to the contrary, Seller expressly agrees
+that Seller’s obligations to MODIFI under this
+Agreement shall survive and remain in full force and
+effect notwithstanding the termination or
+expiration of this Agreement, any default under this
+Agreement (other than the uncured failure of
+MODIFI to deposit the applicable Purchase Price), or
+10
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+any failure of the Platform for any reason
+whatsoever.
+11. INDEMNITIES
+11.1 Seller shall defend and indemnify MODIFI and its
+affiliates together with their respective successors
+and permitted assigns, and all officers, directors,
+shareholders, controlling Persons, Employees,
+agents and representatives of any of the foregoing
+(the MODIFI Indemnified Parties) on demand
+against any losses, claims, liabilities, damages, costs
+and expenses (including reasonable attorney's fees)
+awarded against or incurred by them arising out of:
+11.1.1 any breach of this Agreement by the Seller
+(including breaches of representation or warranty
+and any costs incurred in Transferring repurchased
+Accounts Receivable to Seller) and any provision of
+this Agreement being unenforceable against Seller
+or failing to comply or conform with or resulting in
+penalties under any Applicable Law (including the
+applicable usury laws of any jurisdiction);
+11.1.2 the payment of any tax related to this Agreement, in
+relation to any Transferred Account Receivable,
+arising in relation to or in respect of any Fees in the
+jurisdiction in which Seller is located, established or
+resident, the provision of goods and services by
+Seller to a Buyer, use of the Platform, or amounts
+received by Seller as a result of Seller’s use of the
+Platform, imposed by any authority, other than
+taxes relating to the corporate profits of MODIFI; or
+11.1.3 any disputes that arise in relation to any Accounts
+Receivable or this Agreement, including:
+11.1.3.1 disputes in relation to:
+(a) any failure by Buyer to pay Seller amounts owed or
+vice versa; or
+(b) any Adverse Claims;
+11.1.4 the inaccuracy of any information submitted into
+the Platform by the Seller, including any inaccuracy
+with respect to the Due Date, the value or currency
+of any Invoice; or
+11.1.5 use of the Platform by Seller; or
+11.1.6 any claim by Seller against the licensor of the
+Platform, other than claims finally determined to
+arise from breach by such licensor of its agreement
+with MODIFI or such licensor’s gross negligence or
+wilful misconduct;
+11.1.7 any reduction to the amount due with respect to an
+Account Receivable which has been Transferred to
+MODIFI including where the relevant goods are
+returned or the applicable Buyer has a
+counterclaim;
+11.1.8 any claim by a third party against the licensor of the
+Platform due to the actions or omissions of Seller in
+breach of this Agreement; or
+11.1.9 any Political Risk materialising in respect of a Buyer.
+11.2 Any amount due but unpaid by Seller to MODIFI
+under this Agreement shall accrue interest at the
+rate of 4 percent per annum on top of the sum of
+the annualised Transaction Fee rate and the
+Reference Rate applied to the last Account
+Receivable sold by the Seller to MODIFI (the
+applicable rate, the Default Rate) with such interest
+being payable on demand until all amounts owing
+hereunder are paid in full.
+11.3 Regardless of the reason for any late payment by
+the Buyer, where a purchased Account Receivable is
+Collected after the Late Fee Start Date, the Seller
+shall pay to MODIFI an additional servicing fee (the
+Late Fee) of 1.5 percent per month of the Advance
+Rate Amount with respect to such Account
+Receivable accruing from and excluding the Late
+Fee Start Date until the actual date of collection by
+MODIFI and compounding daily but capped at the
+amount of Deferred Purchase Price with respect to
+such Account Receivable.
+12. SCHEDULES
+The Schedules annexed to this Agreement are
+applicable and form part of this Agreement as set
+out below:
+Schedule 1 contains the details of the primary
+contact person of the Seller and bank account
+details of the Seller.
+Schedule 2 contains the terms of the
+Cash-Against-Documents services. Terms used in
+this Agreement and defined in Schedule 2 have the
+meanings given to them in Schedule 2.
+13. CONFIDENTIALITY
+13.1 Subject to the provisions of Clauses 13.2,13.3 and 13.4,
+each party shall:
+13.1.1 treat as strictly confidential and use solely for the
+purposes contemplated by this Agreement all
+information, whether technical or commercial,
+obtained or received by it as a result of entering into
+or performing its obligations under this Agreement
+and relating to the negotiations relating to, or the
+provisions or subject matter of, this Agreement or
+any other party to it (confidential information);
+13.1.2 not, except with the prior written consent of the
+party from whom the confidential information was
+obtained publish or otherwise disclose to any
+person any confidential information except for the
+purposes contemplated by this Agreement; and
+11
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+13.1.3 take reasonable precautions necessary to safeguard
+the confidentiality of the disclosing party’s
+confidential information, including:
+(a) those taken by the receiving party to protect its own
+confidential information; and
+(b) those which the disclosing party may reasonably
+request from time to time.
+13.2 The receiving party may disclose confidential
+information which would otherwise be subject to
+Clause 13.1 but only to the extent that it can
+demonstrate that:
+13.2.1 such disclosure is required by Applicable Law or by
+any securities exchange or regulatory or
+governmental body having jurisdiction over it,
+wherever situated, and whether or not the
+requirement has the force of law;
+13.2.2 the confidential information was lawfully in its
+possession prior to its disclosure by the other party
+(as evidenced by written records) and had not been
+obtained from the disclosing party; and
+13.2.3 the confidential information has come into the
+public domain other than through its fault or the
+fault of any person to whom the confidential
+information has been disclosed in accordance with
+Clause 13.3;
+13.3 Each party may for the purposes contemplated by
+this Agreement disclose confidential information to
+the following Persons or any of them, provided that
+a written confidentiality undertaking in a form
+equivalent to Clause 13.1 has been obtained from
+such Person, or an equivalent professional
+obligation is owed by such Person:
+13.3.1 its professional advisers, auditors, bankers and
+insurers, acting as such;
+13.3.2 actual and potential investors in and providers of
+funding to MODIFI and any related security agent,
+trustee or service provider; and
+13.3.3 its and its affiliates’ directors, officers, employees
+and agents.
+13.4 This Clause 13 shall not prohibit communication
+between MODIFI and a Buyer.
+13.5 The parties acknowledge that any unauthorised use
+or disclosure of any Confidential Information by the
+receiving party may cause irreparable damage to
+the disclosing party and that the disclosing party
+will be entitled to seek injunctive relief or other
+equitable or legal relief to prevent or compensate
+for such unauthorised use or disclosure.
+13.6 Notwithstanding any other provision of this
+Agreement, MODIFI and its agents will not be liable
+to the Seller in relation to any unauthorised access
+or theft of data.
+13.7 Seller acknowledges that MODIFI will have access to
+data in relation to Seller from the Platform including
+historical data.
+14. TERMINATION
+14.1 This Agreement shall become effective on the date
+it has been signed by both parties and shall
+continue in force until terminated in accordance
+with Clauses 14.2 or 14.3.
+14.2 MODIFI may terminate this Agreement with
+immediate effect by giving written notice to Seller if:
+14.2.1 the Seller commits a material breach of any of the
+terms and conditions of this Agreement which is
+incapable of remedy, or if capable of remedy is not
+remedied within 30 days of service of notice by
+MODIFI requiring such remedy; or
+14.2.2 any warranty or undertaking given by Seller in this
+Agreement is found to be untrue or misleading; or
+14.2.3 an Event of Insolvency occurs with respect to the
+Seller.
+14.3 Either party may terminate this Agreement on each
+anniversary of the date on which it comes into
+effect by giving not less than three calendar
+months’ prior written notice to the other party.
+14.4 The Seller shall notify MODIFI promptly upon the
+occurrence of an event or circumstance referred to
+in Clause 14.2.
+14.5 Upon termination of this Agreement for whatever
+reason:
+14.5.1 the rights and obligations of the parties under this
+Agreement shall terminate and be of no further
+effect, except that Clauses 1, 5, 6, 7, 8, 9, 10, 11, 14, 16
+and 17 shall remain in full force and effect; and
+14.5.2 any rights or obligations to which either of the
+parties to this Agreement may be entitled or be
+subject before such termination shall remain in full
+force and effect.
+14.6 Termination shall not affect or prejudice any right to
+damages or other remedy which the terminating
+party may have in respect of the termination events
+mentioned in Clause 14.2 which gave rise to the
+termination or any other right of damages or other
+remedy which any party may have in respect of any
+breach of this Agreement.
+15. NOTICES
+12
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+15.1 Any notice (which term shall in this Clause 15
+include any communication) required to be given
+under or in connection with this Agreement shall,
+except where otherwise provided, be in writing, in
+the English language and sent to the relevant party
+at the address communicated via the Platform.
+15.2 Any party to this Agreement may notify the other
+party of any change to this address or other details
+by 5 Business Days written notice via the Platform.
+15.3 All notices which can be delivered via the Platform,
+must be delivered via the Platform.
+15.4 In addition, any notice to be delivered under Clause
+15 (excluding, for the avoidance of doubt, the notices
+referenced in Clause 15.5 below) may be:
+15.4.1 personally delivered, in which case it shall be
+deemed to have been given upon delivery at the
+relevant address if it is delivered not later than 5:00
+p.m. on a Business Day, or, if it is delivered later than
+5:00 p.m. on a Business Day or at any time on a day
+which is not a Business Day, at 8:00 a.m. on the next
+Business Day;
+15.4.2 if within the same country as the recipient, sent by
+first class pre-paid post, in which case it shall be
+deemed to have been given two Business Days after
+the date of posting; or
+15.4.3 if from or to any place outside the country of the
+recipient, sent by pre-paid airmail, or by air courier
+in which case it shall be deemed to have been given
+seven Business Days after the date of posting in the
+case of airmail or two Business Days after delivery to
+the courier, in the case of air courier;
+15.4.4 sent by electronic mail, in which case it shall be
+deemed to be given when actually received in
+readable form, provided that any notice sent by
+electronic mail after 5:00 p.m. on any Business Day
+or at any time on a day which is not a Business Day
+shall be deemed to have been given at 8:00 a.m. on
+the next Business Day.
+15.5 This Clause 15 does not apply to notices which are
+enabled through the Platform during the ordinary
+course of Posting Invoices, Transfers, and other
+normal operations of the Platform.
+16. GENERAL
+16.1 This Agreement constitutes the entire statement of
+all terms and representations of the agreement
+between MODIFI and Seller with respect to its
+subject matter and supersedes and extinguishes all
+prior drafts, undertakings and representations
+whether oral or in writing or understandings.
+16.2 Each party acknowledges that (a) it is capable of
+evaluating the merits and risks (including tax,
+accounting, regulatory, legal and financial matters)
+of entering into this Agreement, and that it is
+entering into this Agreement in reliance upon such
+tax, accounting, regulatory, legal and financial
+advice as it deems necessary to obtain from its own
+advisors and not from the other party hereto; (b)
+that it is not relying upon oral or other
+representations, warranties or statements not
+expressly set forth in this Agreement and (c) it
+agrees that it shall have no remedy in respect of any
+other representation or warranty not expressly set
+forth in this Agreement except in the case of fraud.
+16.3 Any waiver or variation of this Agreement will not be
+effective unless executed in writing by both parties
+or, in the case of any waiver, executed in writing by
+the party waiving the benefit of any provision.
+16.4 MODIFI may transfer or sell its interest under this
+Agreement and/or in any Account Receivable to any
+Person. MODIFI may use subcontractors or other
+third parties to perform its obligations under this
+Agreement, provided that MODIFI shall remain
+primarily liable for the performance of all of its
+obligations under this Agreement by such
+subcontractors or third parties.
+16.5 Seller shall not assign any of its rights, title and
+interest in or to, or its obligations or liabilities
+hereunder without the prior express written
+consent of MODIFI.
+16.6 If any provision of this Agreement shall be held to
+be illegal, void, invalid or unenforceable under the
+laws of any jurisdiction, the legality, validity and
+enforceability of the remainder of this Agreement in
+that jurisdiction shall not be affected, and the
+legality, validity and enforceability of the whole of
+this Agreement in any other jurisdiction shall not be
+affected.
+16.7 Subject to any express provisions to the contrary in
+this Agreement:
+16.7.1.1 nothing contained herein shall be deemed to create
+a relationship of agency, joint venture or
+partnership or a fiduciary relationship; and
+16.7.1.2 the parties shall have no right or authority to and
+shall not do any act, enter into any contract, make
+any representation, give any warranty, incur any
+liability, assume any obligation, whether express or
+implied, of any kind on behalf of or bind the other
+party in any way.
+16.8 The rights, powers, privileges and remedies
+provided in this Agreement are cumulative and are
+not exclusive of any rights, powers, privileges or
+remedies provided by law or otherwise.
+16.9 No failure to exercise nor any delay in exercising by
+any party to this Agreement of any right, power,
+13
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+privilege or remedy under this Agreement shall
+impair or operate as a waiver thereof in whole or in
+part. No single or partial exercise of any right, power
+privilege or remedy under this Agreement shall
+prevent any further or other exercise thereof or the
+exercise of any other right, powers, privilege or
+remedy.
+16.10 Subject to any express provisions to the contrary
+each party to this Agreement shall pay its own costs
+of and incidental to the negotiation, preparation,
+execution and carrying into effect of this
+Agreement.
+16.11 This Agreement may be executed in two or more
+counterparts, which together shall constitute one
+Agreement.
+16.12 MODIFI may set off any matured obligation due to it
+by the Seller against any matured obligation owed
+by MODIFI to the Seller, regardless of the place of
+payment, booking branch or currency of either
+obligation. If the obligations are in different
+currencies, MODIFI may convert either obligation at
+a market rate of exchange in its usual course of
+business for the purpose of the set-off. The Seller
+shall not be entitled to exercise any set-off of
+amounts owed by it to MODIFI.
+16.13 No recourse under any obligation, covenant, or
+agreement of MODIFI (acting in any capacity
+whatsoever) contained in this Agreement shall be
+had against any shareholder, officer, director,
+employee or agent of MODIFI as such, by the
+enforcement of any assessment or by any
+proceeding, by virtue of any statute or otherwise, it
+being expressly agreed and understood that each of
+its obligations hereunder is a corporate obligation of
+the relevant party and no personal liability shall
+attach to or be incurred by the shareholders,
+officers, agents, employees or directors of MODIFI as
+such, or any of them, under or by reason of any of
+the obligations, covenants or agreements contained
+in this instrument, or implied therefore, and that
+any and all personal liability for breaches by MODIFI
+of any such obligations, covenants or agreements,
+either at law or by statute or constitution, of every
+such shareholder, officer, agent, employee or
+director is hereby expressly waived by the other
+parties as a condition of and consideration for the
+execution of this Agreement.
+16.14 The Seller hereby undertakes to MODIFI that it shall
+not, nor shall any party on its behalf, at any time
+institute against, or join any person in instituting
+against MODIFI or any or all of the revenues and
+assets of MODIFI any bankruptcy, winding up,
+reorganisation, examinership, arrangement,
+insolvency or liquidation dissolution proceeding or
+other proceeding under any similar law nor petition
+for the appointment of a receiver, administrator,
+examiner, administrative receiver, trustee, liquidator,
+sequestrator or similar officer of it nor participate in
+any ex parte proceedings.
+16.15 No person which is not a party hereto shall have any
+rights under the Contracts (Rights of Third Parties)
+Act 1999 in relation to this Agreement.
+17. GOVERNING LAW
+17.1 Governing law: This Agreement and any
+non-contractual obligations arising out of or
+pursuant to it shall be governed by English law.
+17.2 Jurisdiction: Where the Seller is formed,
+incorporated or residing in any country other than
+the People's Republic of China, each party
+irrevocably submits to the exclusive jurisdiction of
+the English courts.
+17.3 CN Arbitration Clause:
+17.3.1 Where the Seller is formed, incorporated or residing
+in the People's Republic of China, any dispute
+arising out of or in connection with this Agreement
+or over its validity shall be resolved through friendly
+consultation. If no agreement can be reached
+within 60 (sixty) days after the dispute has arisen,
+the dispute shall, to the exclusion of the ordinary
+courts of law, only be submitted for arbitration to
+London Court of International Arbitration (“LCIA”),
+and shall be decided according to the arbitration
+rules of LCIA effective on the date of submitting the
+request for arbitration. The place of arbitration shall
+be London, United Kingdom. All arbitration
+proceedings shall be conducted in the English
+language.
+17.3.2 The arbitration tribunal shall consist of 1 (one)
+arbitrator, appointed by the LCIA.
+17.3.3 The arbitral award shall be final and binding on both
+Parties. The arbitration fee and the winning Party’s
+reasonable expenses, including lawyers’ fees, shall
+be borne by the losing Party except awarded
+otherwise by the arbitration tribunal. Petition for
+enforcement of the arbitral award may be filed with
+any court having jurisdiction thereof.
+17.3.4 During the arbitration proceedings, the Parties shall
+continue to perform this Agreement except for the
+provisions which are under dispute.
+14
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+SCHEDULE 1
+Contact and bank account details
+1. Introduction
+This Schedule is supplemental to the Agreement. Definitions used in this Schedule shall have the meaning given to them in the
+Agreement. This Schedule sets out certain important details, namely the contact persons of the Seller and the Seller’s Bank
+Account details. The details set out in this Schedule can only be amended in writing in such form as is required by MODIFI from
+time to time.
+2. Primary contact person at SELLER
+The primary contact person(s) in this Schedule will be granted access to the Platform and will be allowed to take binding actions on
+the Platform on behalf of the Seller (please refer to Clause 9 of the RPTC). In addition, the primary contact person(s) may appoint
+other persons to be granted access to the Platform and to take binding actions on the Platform on behalf of the Seller. The Seller
+hereby confirms that such actions by such persons shall create binding obligations of the Seller (please refer to Clause 9 of the
+RPTC).
+First name Last name (Company) Email address Telephone number
+3. Bank Account Details of Seller
+The below Bank Account details will be used by MODIFI for payments under the Agreement. MODIFI accepts only one bank
+account per accepted currency (currently EUR, USD and GBP).
+By signing this Schedule, the Seller confirms that he has checked the details underneath and that these details are
+correct:
+______________________________________________________
+SELLER
+Place:
+Date:
+15
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+EUR LAJ EXPORTS LIMITED 001484600002512
+USD
+LAJ EXPORTS LIMITED YESBINBB
+LAJ EXPORTS LIMITED
+GBP
+001484600002512
+Naresh
+18 July 2024
+YESBINBB
+Account Number
+YESBINBB
+Aneja
+NEW DELHI
+Swift Code
+naresh@lajexports.com 00919811013606
+Account Holder Name
+001484600002512
+Currency
+SCHEDULE 2 Cash-Against-Documents services
+1. Introduction
+This Schedule is supplemental to the Agreement. Definitions used in this Schedule shall have the meaning given to
+them in the Agreement.
+2. Cash-Against-Documents Services
+Upon request of a Seller and subject to MODIFI's consent (at MODIFI's sole discretion), MODIFI may purchase
+Accounts Receivable under the Agreement that have 'CAD' or ' Cash-Against-Documents' (hereafter: "CAD") as
+payment term. This means that the Buyer must pay the relevant Account Receivable in order to receive the
+commercial documents ("Documents"), including for example invoices, purchase orders, transport documents (such
+as Bill of Lading or Airway Bill), documents of title or other similar documents. MODIFI shall purchase such Accounts
+Receivable on the following conditions:
+a. the Seller has informed the Buyer and agreed with the Buyer that MODIFI (or an agent on MODIFI's behalf)
+shall hold the Documents in custody until such time that the Buyer pays the Account Receivable in and any
+other amounts payable from the Buyer to MODIFI in full (without deduction or set-off) (the "CAD Services");
+b. on or before the IPP Payment Date, the Documents have been placed in the custody of MODIFI or any agent
+appointed by MODIFI, accompanied by a complete list of the Documents and (where applicable) the
+numerical count of each Document;
+c. the Seller gives clear and unambiguous instructions with regard to the release of the Documents (including
+the identity of the Buyer, its representatives or the address for receiving the Documents, etc.). MODIFI shall
+disregard any instructions from the Buyer unless specifically instructed by the Seller to adhere to such
+instructions;
+d. without prejudice to any Due Date requirements in the Agreement, the Due Date for payment by the Buyer
+shall be no later than the date of discharge of goods at the destination port;
+e. Documents are to be presented to the Buyer in the form in which they have been received from the Seller.
+3. Fees for Cash-Against-Documents-Services
+In consideration for the CAD Services, MODIFI may increase the Processing Fee with EUR 20.00 / USD 25.00 / GBP
+20.00 or CAD 30.00 or such other amount as will be displayed on the Platform.
+4. Indemnification
+The Seller shall defend, indemnify and hold harmless all MODIFI Indemnified Parties on demand against any losses,
+claims, liabilities, damages, costs and expenses (including reasonable attorney's fees) awarded against or incurred by
+them arising out of the CAD Services or any disputes with Buyers or any third parties (including shipping companies,
+ports, etc.) related to or resulting from the CAD Services.
+5. Limitation of Liability / No Assumption of Responsibilities:
+To the maximum extent permitted by applicable law, in no event shall MODIFI be liable for any damages (including
+any special, incidental, indirect or consequential damages) arising out of or in connection with the CAD Services
+(including due to negligence or otherwise), even if MODIFI has been advised of the possibility of such damages,
+except in case of MODIFI's gross negligence or wilful misconduct. The provision of the CAD Services under no
+circumstances means that MODIFI has taken any responsibility or has assumed any obligations, undertakings,
+liabilities or responsibilities of the Seller or Buyer arising from their Underlying Relationship, including with respect to
+the Documents or any goods to which the Documents relate, including storage, insurance, or taking delivery of
+goods. MODIFI does not have any responsibility vis-à-vis third parties such as shipping companies, port authorities,
+insurers, etc. Such responsibility lies solely with the Seller or the Buyer, as the case may be. MODIFI assumes no
+liability or responsibility for the form, sufficiency, accuracy, genuineness, falsification or legal effect of any Documents,
+or for the general and/or particular conditions stipulated in the Documents or superimposed thereon; nor does
+MODIFI assume any liability or responsibility for the description, quantity, weight, quality, condition, packing, delivery,
+value or existence of the goods represented by any Documents, or for the good faith or acts and/or omissions,
+solvency, performance or standing of any third parties. MODIFI assumes no liability or responsibility for the
+consequences arising out of delay and/or loss in transit of any message(s), letter(s) or Documents. MODIFI will not be
+liable or responsible for any delays resulting from the need to obtain clarification of any instructions received. MODIFI
+assumes no liability or responsibility for consequences arising out of the interruption of their business by Acts of God,
+16
+Docusign Envelope ID: 0CB1E72C-7FC5-4111-BCA5-78189067D3A0
+riots, civil commotions, pandemics, insurrections, wars, or any other causes beyond their control or by strikes or
+lockouts.
+6. Withholding of Documents
+Where MODIFI is entitled to any amounts payable by the Seller, and provided the Buyer has not paid MODIFI and
+has become entitled to receive the Documents, MODIFI may hold the Documents under its custody until such time

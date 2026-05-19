@@ -1,5 +1,5 @@
 import express from 'express';
-import { TransactionModel, EntityModel } from '../models/schemas';
+import { listEntities, listTransactions } from '../data/dynamoRepository';
 
 const router = express.Router();
 
@@ -7,29 +7,19 @@ const router = express.Router();
 router.get('/kpis', async (req, res) => {
   try {
     // Calculate KPIs from MongoDB data
-    const totalTransactions = await TransactionModel.countDocuments();
-    const totalFeesEarned = await TransactionModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$feeAmount' } } }
-    ]);
-    const totalReserves = await TransactionModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$reserveAmount' } } }
-    ]);
-    
-    // Calculate portfolio statistics
-    const totalSuppliersCount = await EntityModel.countDocuments({ type: 'supplier' });
-    const totalCreditLimit = await EntityModel.aggregate([
-      { $match: { type: 'supplier' } },
-      { $group: { _id: null, total: { $sum: '$creditLimit' } } }
-    ]);
-    const totalUsedLimit = await EntityModel.aggregate([
-      { $match: { type: 'supplier' } },
-      { $group: { _id: null, total: { $sum: '$usedLimit' } } }
-    ]);
+    const transactions = await listTransactions();
+    const entities = await listEntities();
 
-    const feesEarned = totalFeesEarned[0]?.total || 0;
-    const reserves = totalReserves[0]?.total || 0;
-    const creditLimit = totalCreditLimit[0]?.total || 1; // Avoid division by zero
-    const usedLimit = totalUsedLimit[0]?.total || 0;
+    const totalTransactions = transactions.length;
+    const feesEarned = transactions.reduce((sum, tx) => sum + (tx.feeAmount || 0), 0);
+    const reserves = transactions.reduce((sum, tx) => sum + (tx.reserveAmount || 0), 0);
+
+    // Calculate portfolio statistics
+    const suppliers = entities.filter((entity) => entity.type === 'supplier');
+    const totalSuppliersCount = suppliers.length;
+    const creditLimit = suppliers.reduce((sum, supplier) => sum + (supplier.creditLimit || 0), 0) || 1;
+    const usedLimit = suppliers.reduce((sum, supplier) => sum + (supplier.usedLimit || 0), 0);
+
     const portfolioUtilization = creditLimit > 0 ? (usedLimit / creditLimit) * 100 : 0;
     
     const kpis = {

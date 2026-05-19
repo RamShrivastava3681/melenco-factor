@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,6 +63,40 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
   const [supplierFees, setSupplierFees] = useState<any>(null);
 
   const getEntityCurrency = (entity: any) => String(entity?.currency || entity?.bankDetails?.currency || 'USD').toUpperCase();
+  const getPositiveLimit = (value: unknown) => {
+    const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? 0));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  };
+
+  const getSupplierHardLimit = (supplier: any) => getPositiveLimit(supplier?.totalLimitSanctioned ?? supplier?.creditLimit ?? 0);
+  const getSupplierAvailableLimit = (supplier: any) => {
+    const hardLimit = getSupplierHardLimit(supplier);
+    const used = getPositiveLimit(supplier?.usedLimit ?? 0);
+    return Math.max(0, hardLimit - used);
+  };
+
+  const getBuyerHardLimitForSupplier = (buyer: any, supplier: any) => {
+    const supplierIds = [supplier?.id, supplier?._id, supplier?.entityId]
+      .filter(Boolean)
+      .map((value) => String(value));
+
+    const supplierSpecificLimit = (buyer?.supplierLimits || []).find((limit: any) => {
+      const configuredSupplierId = String(limit?.supplierId || '');
+      return configuredSupplierId && supplierIds.includes(configuredSupplierId);
+    });
+
+    if (supplierSpecificLimit) {
+      return getPositiveLimit(supplierSpecificLimit.transactionLimit);
+    }
+
+    return getPositiveLimit(buyer?.creditLimit ?? 0);
+  };
+
+  const getBuyerAvailableLimitForSupplier = (buyer: any, supplier: any) => {
+    const hardLimit = getBuyerHardLimitForSupplier(buyer, supplier);
+    const used = getPositiveLimit(buyer?.usedCredit ?? 0);
+    return Math.max(0, hardLimit - used);
+  };
 
   // Helper function to get payment terms from supplier's transaction fees
   const getSupplierPaymentTerms = (transactionFees: any) => {
@@ -434,7 +468,7 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
     
     // Handle supplier selection
     if (field === 'supplierId') {
-      const selectedSupplier = suppliers.find(s => (s.id || s._id) === value);
+      const selectedSupplier = suppliers.find(s => (s.entityId || s.id || s._id) === value);
       setSelectedSupplier(selectedSupplier || null);
       updatedData.supplierName = selectedSupplier ? selectedSupplier.name : '';
 
@@ -447,7 +481,7 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
         // Filter buyers to show only those linked to this supplier
         const linkedBuyers = buyers.filter(buyer => 
           buyer.supplierLimits && 
-          buyer.supplierLimits.some((sl: any) => sl.supplierId === (selectedSupplier.id || selectedSupplier._id))
+          buyer.supplierLimits.some((sl: any) => sl.supplierId === (selectedSupplier.entityId || selectedSupplier.id || selectedSupplier._id))
         );
         const sameCurrencyBuyers = linkedBuyers.filter((buyer) => getEntityCurrency(buyer) === supplierCurrency);
         setFilteredBuyers(sameCurrencyBuyers);
@@ -521,7 +555,7 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
     
     // Handle buyer selection
     if (field === 'buyerId') {
-      const selectedBuyer = buyers.find(b => (b.id || b._id) === value);
+      const selectedBuyer = buyers.find(b => (b.entityId || b.id || b._id) === value);
 
        if (selectedBuyer && selectedSupplier) {
         const supplierCurrency = getEntityCurrency(selectedSupplier);
@@ -672,16 +706,16 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
       
       // Validate against supplier and buyer limits
       if (selectedSupplier && invoiceAmount > 0) {
-        const supplierAvailable = (selectedSupplier.totalLimitSanctioned || 0) - (selectedSupplier.usedLimit || 0);
+        const supplierAvailable = getSupplierAvailableLimit(selectedSupplier);
         if (invoiceAmount > supplierAvailable) {
           toast.error(`Invoice amount exceeds supplier available limit of $${supplierAvailable.toLocaleString()}`);
         }
       }
       
-      if (selectedBuyer && invoiceAmount > 0) {
-        const buyerAvailable = (selectedBuyer.creditLimit || 0) - (selectedBuyer.usedCredit || 0);
+      if (selectedBuyer && selectedSupplier && invoiceAmount > 0) {
+        const buyerAvailable = getBuyerAvailableLimitForSupplier(selectedBuyer, selectedSupplier);
         if (invoiceAmount > buyerAvailable) {
-          toast.error(`Invoice amount exceeds buyer available credit of $${buyerAvailable.toLocaleString()}`);
+          toast.error(`Invoice amount exceeds buyer available limit of $${buyerAvailable.toLocaleString()}`);
         }
       }
     }
@@ -744,7 +778,7 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
     
     // Validate limits
     if (selectedSupplier) {
-      const supplierAvailable = (selectedSupplier.totalLimitSanctioned || 0) - (selectedSupplier.usedLimit || 0);
+      const supplierAvailable = getSupplierAvailableLimit(selectedSupplier);
       if (invoiceAmount > supplierAvailable) {
         toast.error('Transaction exceeds supplier limit', {
           description: `Available supplier limit: $${supplierAvailable.toLocaleString()}`
@@ -753,11 +787,11 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
       }
     }
     
-    if (selectedBuyer) {
-      const buyerAvailable = (selectedBuyer.creditLimit || 0) - (selectedBuyer.usedCredit || 0);
+    if (selectedBuyer && selectedSupplier) {
+      const buyerAvailable = getBuyerAvailableLimitForSupplier(selectedBuyer, selectedSupplier);
       if (invoiceAmount > buyerAvailable) {
         toast.error('Transaction exceeds buyer credit limit', {
-          description: `Available buyer credit: $${buyerAvailable.toLocaleString()}`
+          description: `Available buyer limit: $${buyerAvailable.toLocaleString()}`
         });
         return;
       }
@@ -922,6 +956,9 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
           <DialogTitle className="text-xl font-semibold text-financial-navy">
             Create New Transaction
           </DialogTitle>
+          <DialogDescription className="hidden">
+            Fill out the form below to create a new transaction.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -989,7 +1026,7 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
                       ) : (
                         suppliers.map((supplier) => {
                           const available = (supplier.totalLimitSanctioned || 0) - (supplier.usedLimit || 0);
-                          const supplierId = supplier.id || supplier._id;
+                          const supplierId = supplier.entityId || supplier.id || supplier._id;
                           
                           if (!supplierId) {
                             console.error('Supplier missing ID:', supplier);
@@ -1054,7 +1091,7 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
                           const supplierLimit = buyer.supplierLimits?.find((sl: any) => sl.supplierId === formData.supplierId);
                           const transactionLimit = supplierLimit?.transactionLimit || 0;
                           const available = transactionLimit; // Since usedAmount is 0
-                          const buyerId = buyer.id || buyer._id;
+                          const buyerId = buyer.entityId || buyer.id || buyer._id;
                           
                           if (!buyerId) {
                             console.error('Buyer missing ID:', buyer);

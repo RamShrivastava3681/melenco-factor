@@ -1,9 +1,17 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import multer from 'multer';
 import { broadcastNotification } from '../index';
-import { EntityModel, IEntity } from '../models/schemas';
+import { IEntity } from '../models/schemas';
 import { uploadDocumentToS3 } from '../utils/s3';
+import {
+  createEntity,
+  deleteEntity,
+  getEntityById,
+  listEntities,
+  listEntitiesByType,
+  updateEntity
+} from '../data/dynamoRepository';
+import { isDynamoConfigured } from '../data/dynamoClient';
 
 // Mock data as fallback
 import { mockBuyers, mockSuppliers } from '../../mockData';
@@ -20,9 +28,8 @@ const mockEntities = [...mockBuyers, ...mockSuppliers];
 // Get all entities
 router.get('/', async (req, res) => {
   try {
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('MongoDB not connected, using mock data');
+    if (!isDynamoConfigured()) {
+      console.warn('DynamoDB not configured, using mock data');
       return res.json({
         success: true,
         message: 'Entities retrieved successfully (mock data)',
@@ -30,7 +37,7 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const entities = await EntityModel.find().sort({ createdAt: -1 });
+    const entities = await listEntities();
     res.json({
       success: true,
       message: 'Entities retrieved successfully',
@@ -52,7 +59,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const entity = await EntityModel.findById(id);
+    const entity = await getEntityById(id);
     
     if (!entity) {
       return res.status(404).json({
@@ -78,9 +85,8 @@ router.get('/:id', async (req, res) => {
 // Get buyers only
 router.get('/buyers/list', async (req, res) => {
   try {
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('MongoDB not connected, using mock buyer data');
+    if (!isDynamoConfigured()) {
+      console.warn('DynamoDB not configured, using mock buyer data');
       return res.json({
         success: true,
         message: 'Buyers retrieved successfully (mock data)',
@@ -88,7 +94,7 @@ router.get('/buyers/list', async (req, res) => {
       });
     }
 
-    const buyers = await EntityModel.find({ type: 'buyer' }).sort({ createdAt: -1 });
+    const buyers = await listEntitiesByType('buyer');
     
     // If no buyers found in database, fallback to mock data
     if (!buyers || buyers.length === 0) {
@@ -119,9 +125,8 @@ router.get('/buyers/list', async (req, res) => {
 // Get suppliers only
 router.get('/suppliers/list', async (req, res) => {
   try {
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('MongoDB not connected, using mock supplier data');
+    if (!isDynamoConfigured()) {
+      console.warn('DynamoDB not configured, using mock supplier data');
       return res.json({
         success: true,
         message: 'Suppliers retrieved successfully (mock data)',
@@ -129,7 +134,7 @@ router.get('/suppliers/list', async (req, res) => {
       });
     }
 
-    const suppliers = await EntityModel.find({ type: 'supplier' }).sort({ createdAt: -1 });
+    const suppliers = await listEntitiesByType('supplier');
     
     // If no suppliers found in database, fallback to mock data
     if (!suppliers || suppliers.length === 0) {
@@ -161,7 +166,14 @@ router.get('/suppliers/list', async (req, res) => {
 router.get('/suppliers/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const supplier = await EntityModel.findById(id).where('type').equals('supplier');
+    const supplier = await getEntityById(id);
+
+    if (supplier && supplier.type !== 'supplier') {
+      return res.status(404).json({
+        success: false,
+        message: 'Supplier not found'
+      });
+    }
     
     if (!supplier) {
       return res.status(404).json({
@@ -191,14 +203,16 @@ router.post('/', upload.single('agreementFrameworkDocument'), async (req, res) =
       ? JSON.parse(req.body.payload)
       : req.body;
     const currency = String(entityData.currency || entityData?.bankDetails?.currency || 'USD').toUpperCase();
-    const allowedCurrencies = ['USD', 'EUR', 'GBP'];
+    const allowedCurrencies = ['USD', 'EUR', 'GBP'] as const;
 
-    if (!allowedCurrencies.includes(currency)) {
+    if (!allowedCurrencies.includes(currency as typeof allowedCurrencies[number])) {
       return res.status(400).json({
         success: false,
         message: 'Invalid currency. Allowed values are USD, EUR, GBP.'
       });
     }
+
+    const normalizedCurrency = currency as typeof allowedCurrencies[number];
     
     // Calculate total credit limit from supplier limits (for buyers)
     let totalCreditLimit = 0;
@@ -224,10 +238,10 @@ router.post('/', upload.single('agreementFrameworkDocument'), async (req, res) =
       agreementFrameworkDocumentName = req.file.originalname;
     }
 
-    const newEntity = new EntityModel({
+    const newEntity: IEntity = {
       entityId: generatedEntityId,
       name: entityData.name,
-      currency,
+      currency: normalizedCurrency,
       type: entityData.type, // 'supplier' or 'buyer'
       status: 'active',
       riskCategory: 'medium', 
@@ -299,12 +313,11 @@ router.post('/', upload.single('agreementFrameworkDocument'), async (req, res) =
       taxId: entityData.taxId,
       notes: entityData.notes,
       email: entityData.email,
-      agreementFrameworkDocumentKey,
-      agreementFrameworkDocumentName
-    });
+      ...(agreementFrameworkDocumentKey ? { agreementFrameworkDocumentKey } : {}),
+      ...(agreementFrameworkDocumentName ? { agreementFrameworkDocumentName } : {})
+    };
 
-    // Save to MongoDB
-    const savedEntity = await newEntity.save();
+    const savedEntity = await createEntity(newEntity);
 
     console.log('Entity created:', savedEntity);
 
@@ -338,11 +351,7 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
-    const updatedEntity = await EntityModel.findByIdAndUpdate(
-      id, 
-      { ...updateData }, 
-      { new: true, runValidators: true }
-    );
+    const updatedEntity = await updateEntity(id, { ...updateData });
     
     if (!updatedEntity) {
       return res.status(404).json({
@@ -373,7 +382,7 @@ router.put('/:id/limits', async (req, res) => {
     const { id } = req.params;
     const { newLimit, reason, adjustedBy } = req.body;
     
-    const entity = await EntityModel.findById(id);
+    const entity = await getEntityById(id);
     
     if (!entity) {
       return res.status(404).json({
@@ -417,11 +426,7 @@ router.put('/:id/limits', async (req, res) => {
         };
 
     // Update entity
-    const updatedEntity = await EntityModel.findByIdAndUpdate(
-      id,
-      limitUpdates,
-      { new: true, runValidators: true }
-    );
+    const updatedEntity = await updateEntity(id, limitUpdates);
     
     console.log(`Limit adjusted for ${entity.name}: ${currentLimit} -> ${newLimit} (${reason})`);
     
@@ -450,24 +455,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('MongoDB not connected - cannot delete entities from database');
-      return res.status(503).json({
-        success: false,
-        message: 'Database not available - cannot delete entities'
-      });
-    }
-
-    // Validate ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid entity ID format'
-      });
-    }
-    
-    const deletedEntity = await EntityModel.findByIdAndDelete(id);
+    const deletedEntity = await deleteEntity(id);
     
     if (!deletedEntity) {
       return res.status(404).json({
@@ -476,7 +464,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
-    console.log('Entity deleted:', deletedEntity.name, deletedEntity._id);
+    console.log('Entity deleted:', deletedEntity.name, deletedEntity.entityId);
     
     // Send notification about deleted entity
     broadcastNotification({

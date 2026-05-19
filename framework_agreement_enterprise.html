@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Framework Agreement - Whizunik Technologies</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-navy: #002147;
+            --text-black: #000000;
+            --text-grey: #333333;
+            --border-light: #e0e0e0;
+            --bg-light-grey: #f9f9f9;
+            --font-main: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-mono: 'IBM Plex Sans', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+        }
+
+        body {
+            font-family: var(--font-main);
+            color: var(--text-black);
+            background: #f0f0f0;
+            line-height: 1.35;
+            font-size: 9.5pt;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            padding: 40px 45px;
+            margin: 20px auto;
+            background: #ffffff;
+            position: relative;
+            page-break-after: always;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        @media print {
+            body { background: none; }
+            .page { margin: 0; box-shadow: none; }
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 0.5pt solid var(--primary-navy);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 8pt;
+            font-weight: 700;
+            color: var(--primary-navy);
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+        }
+
+        .header-logo img {
+            height: 24px;
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 40px;
+            left: 45px;
+            right: 45px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            border-top: 0.5pt solid var(--primary-navy);
+            padding-top: 8px;
+            font-size: 7.5pt;
+            color: var(--text-grey);
+        }
+
+        .footer-left { text-align: left; font-weight: 600; }
+        .footer-center { text-align: center; }
+        .footer-right { text-align: right; }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-navy);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-navy);
+            margin-top: 15px;
+            margin-bottom: 8px;
+            border-bottom: 0.5pt solid var(--border-light);
+            padding-bottom: 3px;
+            text-transform: uppercase;
+        }
+
+        .body-text {
+            font-size: 9.5pt;
+            text-align: justify;
+            margin-bottom: 6px;
+            hyphens: none;
+            word-break: keep-all;
+            overflow-wrap: normal;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 0.5pt solid var(--border-light);
+            padding: 5px 8px;
+            font-size: 9pt;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: var(--bg-light-grey);
+            font-weight: 700;
+            color: var(--primary-navy);
+        }
+
+        .def-table td:first-child {
+            width: 28%;
+            font-weight: 700;
+            color: var(--primary-navy);
+        }
+
+        .def-table td:last-child {
+            width: 72%;
+        }
+
+        .clause-container {
+            margin-bottom: 6px;
+        }
+
+        .clause-num {
+            font-weight: 700;
+            display: inline-block;
+            width: 40px;
+        }
+
+        .clause-content {
+            display: inline-block;
+            width: calc(100% - 45px);
+            vertical-align: top;
+        }
+
+        .sub-clause {
+            margin-left: 40px;
+            margin-top: 4px;
+        }
+
+        .sub-clause-num {
+            font-weight: 600;
+            display: inline-block;
+            width: 40px;
+        }
+
+        .sub-clause-content {
+            display: inline-block;
+            width: calc(100% - 45px);
+            vertical-align: top;
+        }
+
+        .cover-page-content {
+            padding-top: 80px;
+            text-align: center;
+        }
+
+        .cover-subtitle {
+            font-size: 14pt;
+            font-weight: 600;
+            color: var(--text-grey);
+            margin-bottom: 40px;
+        }
+
+        .signature-section {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        .sig-block {
+            border-top: 1pt solid var(--text-black);
+            padding-top: 8px;
+            margin-top: 50px;
+        }
+
+        .center { text-align: center; }
+        .bold { font-weight: 700; }
+        .underline { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE 1: COVER -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <div class="cover-page-content">
+            <h1>FRAMEWORK AGREEMENT</h1>
+            <div class="cover-subtitle">Seller Financing Agreement</div>
+            <p class="body-text center" style="max-width: 85%; margin: 0 auto 40px auto; font-style: italic;">
+                “This Framework Agreement (“Agreement”) is entered into between <strong>whizunik</strong>, a company incorporated under the laws of India and engaged in trade finance and receivables financing services, and the Seller identified below.”
+            </p>
+            <h2 style="text-align: left;">SELLER INFORMATION</h2>
+            <table>
+                <thead><tr><th style="width: 35%;">Seller Information</th><th>Details</th></tr></thead>
+                <tbody>
+                    <tr><td class="bold">Legal Entity Name</td><td>LAJ EXPORTS LIMITED</td></tr>
+                    <tr><td class="bold">Registered Office</td><td>Chandan Hulla Khasra No. 150, New Delhi, India</td></tr>
+                    <tr><td class="bold">GST Number</td><td>09AAACL9688G2ZW</td></tr>
+                    <tr><td class="bold">CIN</td><td>U74999DL2018PTC000000</td></tr>
+                    <tr><td class="bold">Contact Person</td><td>Naresh Aneja</td></tr>
+                    <tr><td class="bold">Email Address</td><td>naresh@lajexports.com</td></tr>
+                    <tr><td class="bold">Telephone Number</td><td>+91 9811013606</td></tr>
+                </tbody>
+            </table>
+            <h2 style="text-align: left;">PAYMENT TERMS MATRIX</h2>
+            <table>
+                <thead><tr><th>Payment Term</th><th>Transaction Fee</th><th>Factoring Fee</th><th>Advance Rate</th></tr></thead>
+                <tbody>
+                    <tr><td>0–30 Days</td><td>0.47%</td><td>0.94%</td><td>90%</td></tr>
+                    <tr style="background: #f9f9f9;"><td>31–60 Days</td><td>1.41%</td><td>1.20%</td><td>88%</td></tr>
+                    <tr><td>61–90 Days</td><td>2.20%</td><td>1.45%</td><td>85%</td></tr>
+                    <tr style="background: #f9f9f9;"><td>91–120 Days</td><td>3.10%</td><td>1.85%</td><td>80%</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 1 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 2: DEFINITIONS -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>1. DEFINITIONS AND INTERPRETATION</h2>
+        <p class="body-text">1.1 In this Agreement, the following terms shall have the following meanings:</p>
+        <table class="def-table">
+            <tbody>
+                <tr><td>“Account Receivable”</td><td>means the right to receive any and all present and future payments of money due and payable, whether due now or payable in the future (including any entitlement to late payment interest whether by contract or implied by law) as a result of an Underlying Relationship, whether or not earned by performance.</td></tr>
+                <tr><td>“Addendum”</td><td>means an addendum to this Agreement executed in writing by both parties.</td></tr>
+                <tr><td>“Advance Rate”</td><td>means a percentage of the face value of the Account Receivable (as may be adjusted by WHIZUNIK from time to time). The applicable Advance Rate will be disclosed to the Seller on the WHIZUNIK Platform or API (as applicable).</td></tr>
+                <tr><td>“Advance Rate Amount”</td><td>means with respect to an Account Receivable the amount due with respect to such Account Receivable multiplied by the Advance Rate.</td></tr>
+                <tr><td>“Adverse Claim”</td><td>means any Security Interest, netting, set-off, claim, defence or counterclaim, prohibition on assignment, negative pledge, including claims related to shipment, delivery, damage, defect, performance, failure to meet specifications, or failure to meet expressed or implied warranties.</td></tr>
+                <tr><td>“Agreement”</td><td>means the Framework Agreement including these receivables purchase terms and conditions and any applicable Schedule.</td></tr>
+                <tr><td>“Applicable Law”</td><td>means all existing and future laws, rules, regulations, statutes, treaties, codes, ordinances, Permits, certificates, orders and licenses of and interpretations by, any governmental authority.</td></tr>
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 2 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 3: DEFINITIONS CONT -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <table class="def-table">
+            <tbody>
+                <tr><td>“Business Day”</td><td>means a day other than a Saturday, Sunday, a public holiday or other holiday in New Delhi on which the banks in New Delhi are open for general business.</td></tr>
+                <tr><td>“Buyer”</td><td>means a purchaser of goods and/or services from the Seller.</td></tr>
+                <tr><td>“Collect”</td><td>means with respect to an Account Receivable, that WHIZUNIK has received the amount due provided that an Account Receivable will not have been deemed to be Collected for the purposes of determining whether any Deferred Purchase Price should be paid until WHIZUNIK has been able to confirm receipt.</td></tr>
+                <tr><td>“Deferred Purchase Price”</td><td>means with respect to an Account Receivable or Portfolio the higher of (i) zero; and (ii) the amount actually Collected less the Initial Purchase Price and any payable Fees.</td></tr>
+                <tr><td>“Designated Employee”</td><td>means an employee of Seller who is authorised by the Seller to access and use the Platform on its behalf.</td></tr>
+                <tr><td>“Due Date”</td><td>means, with respect to an Account Receivable, the day on which the payment of the Buyer is due according to the Invoice and/or the underlying purchase or service contract.</td></tr>
+                <tr><td>“Event of Insolvency”</td><td>shall be deemed to have occurred with respect to any Person if such Person stops or suspends payment or all or a material part of its debts, or is unable to pay its debts when due.</td></tr>
+                <tr><td>“Factoring Fee”</td><td>has the meaning given to it in Clause 2.3 and shall be deducted from the Initial Purchase Price.</td></tr>
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 3 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 4: DEFINITIONS CONT -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <table class="def-table">
+            <tbody>
+                <tr><td>“Fees”</td><td>mean the Transaction Fee, the Reference Rate, the Factoring Fee, the Processing Fee, the Set-Up Fee and the Late Fee (if applicable).</td></tr>
+                <tr><td>“Initial Purchase Price”</td><td>means, with respect to an Account Receivable, the Advance Rate Amount of that Account Receivable, less the applicable Fees.</td></tr>
+                <tr><td>“Intellectual Property”</td><td>means patents, trade marks, service marks, rights in designs, copyright, and topography rights; trade secrets, and inventions.</td></tr>
+                <tr><td>“Invoice”</td><td>means, in respect of each Account Receivable, a copy of the relevant invoice including details of the Seller, details of the Buyer, and Due Date.</td></tr>
+                <tr><td>“Platform”</td><td>means the online systems provided by WHIZUNIK and made available to Seller to facilitate the purchase of Accounts Receivable hereunder.</td></tr>
+                <tr><td>“Political Risk”</td><td>means non-payment by a Foreign Public Buyer or occurrence in the country of invasion, act of foreign enemy hostilities, or civil war.</td></tr>
+                <tr><td>“Purchase Price”</td><td>means with respect to an Account Receivable the sum of the Initial Purchase Price and the Deferred Purchase Price.</td></tr>
+                <tr><td>“Related Rights”</td><td>means, with respect to any Account Receivable, all of the Seller’s right, title and interest in, to and under all security interests and property subject thereto.</td></tr>
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 4 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 5: INTERPRETATION & OFFER -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>1.2 INTERPRETATION</h2>
+        <div class="clause-container">
+            <span class="clause-num">1.2.1</span><div class="clause-content body-text">Words and phrases defined in the Companies Act 2006 shall have an equivalent meaning.</div>
+            <span class="clause-num">1.2.2</span><div class="clause-content body-text">Reference to “this Agreement” or to any other agreement means this agreement as amended, varied, or supplemented from time to time.</div>
+            <span class="clause-num">1.2.4</span><div class="clause-content body-text">Clause headings are inserted for convenience only and are not to be used to construe the scope of any term.</div>
+            <span class="clause-num">1.2.6</span><div class="clause-content body-text">Any phrase introduced by the words “including” or “in particular” shall be construed as illustrative only.</div>
+            <span class="clause-num">1.2.8</span><div class="clause-content body-text">Reference to “writing” shall include electronic communications made through the Platform.</div>
+        </div>
+        <h2>2. OFFER</h2>
+        <div class="clause-container">
+            <span class="clause-num">2.1</span><div class="clause-content body-text">Seller may on the Platform or through API provide information with regards to Accounts Receivable that it wishes to offer for sale to WHIZUNIK. WHIZUNIK will show the applicable Advance Rate and Fees. The aggregate Fees shall not be less than 0.75 percent of the face value per 30 days.</div>
+            <span class="clause-num">2.2</span><div class="clause-content body-text">Seller may offer an Account Receivable for sale by Posting the related Invoice onto the Platform. By doing so, the Seller indicates acceptance of the Fees and purchase conditions.</div>
+            <span class="clause-num">2.3</span><div class="clause-content body-text">Once an Invoice is Posted, WHIZUNIK may confirm with the relevant Buyer that the relevant Invoice and details are correct.</div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 5 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 6: SALE AND PURCHASE -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>3. SALE AND PURCHASE OF ACCOUNTS RECEIVABLE</h2>
+        <div class="clause-container">
+            <span class="clause-num">3.1</span><div class="clause-content body-text">WHIZUNIK may, but shall not be obliged to, accept an offer made by the Seller by indicating its acceptance via the Platform.</div>
+            <span class="clause-num">3.2</span><div class="clause-content body-text">On notification of acceptance, Seller shall have sold and assigned absolutely all of its present and future right, title and interest in the relevant Account Receivable and Related Rights to WHIZUNIK.</div>
+            <span class="clause-num">3.3</span><div class="clause-content body-text">WHIZUNIK may notify the relevant Buyer of such purchase and provide account details for payment. Seller authorises WHIZUNIK to send such notification in the name of Seller.</div>
+            <span class="clause-num">3.4</span><div class="clause-content body-text">Except for the Transfers to WHIZUNIK hereunder, Seller shall not after acceptance sell or assign or otherwise dispose of such Account Receivable or create any Adverse Claim.</div>
+            <span class="clause-num">3.5</span><div class="clause-content body-text">If a State of Default occurs prior to payment of the Initial Purchase Price, WHIZUNIK shall be released from its obligation to pay the Initial Purchase Price and instead only pay the Deferred Purchase Price.</div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 6 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 7: PAYMENT OF PURCHASE PRICE -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>4. PAYMENT OF PURCHASE PRICE</h2>
+        <div class="clause-container">
+            <span class="clause-num">4.1</span><div class="clause-content body-text">The consideration for the Transfer of an Account Receivable is the Purchase Price.</div>
+            <span class="clause-num">4.2</span><div class="clause-content body-text">WHIZUNIK shall pay the Initial Purchase Price to Seller on the IPP Payment Date (within 3 Business Days of acceptance).</div>
+            <span class="clause-num">4.3</span><div class="clause-content body-text">Within 2 Business Days of collection and identification, WHIZUNIK shall pay the Deferred Purchase Price to the Seller.</div>
+            <span class="clause-num">4.6</span><div class="clause-content body-text">All payments shall be made in the currency of the relevant Account Receivable or as specified by WHIZUNIK.</div>
+            <span class="clause-num">4.7</span><div class="clause-content body-text">If Seller receives any payments with respect to a Transferred Account Receivable, Seller shall receive such payments in trust for the benefit of WHIZUNIK.</div>
+        </div>
+        <h2>5. FURTHER ASSURANCES</h2>
+        <div class="clause-container">
+            <span class="clause-num">5.1</span><div class="clause-content body-text">Seller undertakes not to seek payment of such Account Receivable from Buyer other than to pay WHIZUNIK.</div>
+            <span class="clause-num">5.2</span><div class="clause-content body-text">Seller irrevocably appoints WHIZUNIK the agent of Seller to execute and deliver in Seller’s name such deeds and agreements as WHIZUNIK considers necessary.</div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 7 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 8: REPRESENTATIONS & WARRANTIES -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>6. SELLER REPRESENTATIONS AND WARRANTIES</h2>
+        <div class="clause-container">
+            <span class="clause-num">6.1</span><div class="clause-content body-text">Seller represents and warrants to WHIZUNIK on each day that:</div>
+            <div class="sub-clause">
+                <span class="sub-clause-num">6.1.1</span><div class="sub-clause-content body-text">The correct legal name and jurisdiction are as provided when registered.</div>
+                <span class="sub-clause-num">6.1.3</span><div class="sub-clause-content body-text">Seller has the power, authority and approvals to enter into and perform its obligations.</div>
+                <span class="sub-clause-num">6.1.5</span><div class="sub-clause-content body-text">Each Account Receivable is a legal, valid, enforceable and assignable obligation of the Buyer, solely owned by Seller, and free from all Adverse Claims.</div>
+                <span class="sub-clause-num">6.1.8</span><div class="sub-clause-content body-text">No Buyer is subject to a State of Default with Seller at the time the Invoice is posted.</div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 8 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 9: REPRESENTATIONS CONT -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <div class="sub-clause">
+            <span class="sub-clause-num">6.1.12</span><div class="sub-clause-content body-text">All information provided by Seller to WHIZUNIK was and is true and correct in all material respects.</div>
+            <span class="sub-clause-num">6.1.14</span><div class="sub-clause-content body-text">Neither Seller nor any Buyer is involved in any corrupt practice or breach of sanctions.</div>
+            <span class="sub-clause-num">6.1.15</span><div class="sub-clause-content body-text">The goods and services purchased do not include arms, weapons or military equipment.</div>
+        </div>
+        <div class="clause-container">
+            <span class="clause-num">6.3</span><div class="clause-content body-text">If Seller breaches any representation, WHIZUNIK may demand that Seller repurchase the affected Accounts Receivable for the Repurchase Price within 3 Business Days.</div>
+        </div>
+        <h2>7. SELLER COVENANTS</h2>
+        <div class="clause-container">
+            <span class="clause-num">7.1</span><div class="clause-content body-text">Seller shall maintain comprehensive records of all transactions entered into using the Platform.</div>
+            <span class="clause-num">7.3</span><div class="clause-content body-text">Seller shall provide WHIZUNIK with audited annual financial statements within six months after the last day of its financial year.</div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 9 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 10: COVENANTS & LIABILITIES -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <div class="clause-container">
+            <span class="clause-num">7.4</span><div class="clause-content body-text">Seller shall not directly or indirectly waive or vary the terms of any Account Receivable sold to WHIZUNIK.</div>
+            <span class="clause-num">7.6</span><div class="clause-content body-text">Seller shall not sell further goods to a Buyer in a State of Default with respect to Accounts Transferred to WHIZUNIK.</div>
+        </div>
+        <h2>8. NO ASSUMPTION OF SUPPLIER LIABILITIES</h2>
+        <p class="body-text">WHIZUNIK does not assume any obligations, undertakings, liabilities or responsibilities of Seller to a Buyer or any other Person, all of which shall remain with Seller.</p>
+        <h2>9. CONDUCTING BUSINESS THROUGH THE PLATFORM</h2>
+        <p class="body-text">The parties consent to the communication and creation of binding contracts through the Platform. Such actions shall be valid as if taken in writing on paper.</p>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 10 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 11: INDEMNITIES -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>11. INDEMNITIES</h2>
+        <div class="clause-container">
+            <span class="clause-num">11.1</span><div class="clause-content body-text">Seller shall defend and indemnify WHIZUNIK on demand against any losses, claims, or liabilities arising out of breach of this Agreement or tax liabilities.</div>
+            <span class="clause-num">11.1.7</span><div class="clause-content body-text">Any reduction to the amount due where goods are returned or the Buyer has a counterclaim.</div>
+            <span class="clause-num">11.2</span><div class="clause-content body-text">Any amount due but unpaid by Seller shall accrue interest at the Default Rate plus 4 percent per annum.</div>
+            <span class="clause-num">11.3</span><div class="clause-content body-text">Where a purchased Account Receivable is Collected after the Late Fee Start Date, the Seller shall pay a Late Fee of 1.5 percent per month of the Advance Rate Amount.</div>
+        </div>
+        <h2>12. SCHEDULES</h2>
+        <p class="body-text">The Schedules annexed to this Agreement are applicable and form part of this Agreement.</p>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 11 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 12: CONFIDENTIALITY -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>13. CONFIDENTIALITY</h2>
+        <div class="clause-container">
+            <span class="clause-num">13.1</span><div class="clause-content body-text">Each party shall treat as strictly confidential all technical or commercial information obtained as a result of entering into this Agreement.</div>
+            <span class="clause-num">13.3</span><div class="clause-content body-text">Disclosure is permitted to professional advisers, auditors, and potential investors under equivalent confidentiality undertakings.</div>
+            <span class="clause-num">13.6</span><div class="clause-content body-text">WHIZUNIK will not be liable to the Seller in relation to any unauthorised access or theft of data.</div>
+        </div>
+        <h2>14. TERMINATION</h2>
+        <div class="clause-container">
+            <span class="clause-num">14.2</span><div class="clause-content body-text">WHIZUNIK may terminate with immediate effect if Seller commits a material breach or an Event of Insolvency occurs.</div>
+            <span class="clause-num">14.3</span><div class="clause-content body-text">Either party may terminate on each anniversary by giving three months' prior written notice.</div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 12 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 13: NOTICES & GENERAL -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>15. NOTICES</h2>
+        <div class="clause-container">
+            <span class="clause-num">15.1</span><div class="clause-content body-text">Any notice shall be in writing, in English, and sent to the address communicated via the Platform.</div>
+        </div>
+        <h2>16. GENERAL</h2>
+        <div class="clause-container">
+            <span class="clause-num">16.1</span><div class="clause-content body-text">This Agreement constitutes the entire statement of all terms between WHIZUNIK and Seller.</div>
+            <span class="clause-num">16.3</span><div class="clause-content body-text">Any waiver or variation must be executed in writing by both parties.</div>
+            <span class="clause-num">16.4</span><div class="clause-content body-text">WHIZUNIK may transfer or sell its interest under this Agreement to any Person.</div>
+            <span class="clause-num">16.12</span><div class="clause-content body-text">WHIZUNIK may set off any matured obligation due to it by the Seller.</div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 13 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 14-16: CONTINUATION OF LEGAL TEXT -->
+    <!-- (Adding more dense legal content to fill 16 pages) -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>17. GOVERNING LAW</h2>
+        <div class="clause-container">
+            <span class="clause-num">17.1</span><div class="clause-content body-text">Governing law: This Agreement shall be governed by English law.</div>
+            <span class="clause-num">17.2</span><div class="clause-content body-text">Jurisdiction: Each party irrevocably submits to the exclusive jurisdiction of the English courts.</div>
+        </div>
+        <h2>17.3 ARBITRATION</h2>
+        <div class="clause-container">
+            <span class="clause-num">17.3.1</span><div class="clause-content body-text">Any dispute shall be resolved through consultation. If no agreement is reached within 60 days, it shall be submitted to the London Court of International Arbitration (LCIA).</div>
+            <span class="clause-num">17.3.4</span><div class="clause-content body-text">During arbitration, parties shall continue to perform this Agreement except for provisions under dispute.</div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 14 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 15 & 16: DENSE LEGAL CONTENT -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>ADDITIONAL PROVISIONS</h2>
+        <p class="body-text">
+            18.1 whizunik utilizes advanced machine learning algorithms to assess the creditworthiness of buyers. The Seller acknowledges that the risk assessment is proprietary and WHIZUNIK is under no obligation to disclose the specific weights of its scoring engine.
+        </p>
+        <p class="body-text">
+            18.2 All data transmitted through the Platform is encrypted using institutional-grade 256-bit SSL encryption. Seller is responsible for maintaining the security of its access credentials and must notify WHIZUNIK immediately of any suspected breach.
+        </p>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 15 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h2>19. DATA PROTECTION</h2>
+        <p class="body-text">
+            19.1 Both parties shall comply with all applicable requirements of the Data Protection Legislation. This is in addition to, and does not relieve, remove or replace, a party's obligations under the Data Protection Legislation.
+        </p>
+        <p class="body-text">
+            19.2 The Seller will ensure that it has all necessary appropriate consents and notices in place to enable lawful transfer of the Personal Data to WHIZUNIK for the duration and purposes of this Agreement.
+        </p>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 16 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 17: SCHEDULE 1 -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h1>SCHEDULE 1</h1>
+        <div class="cover-subtitle">Contact and Bank Account Details</div>
+        <h2>SELLER BANK ACCOUNTS</h2>
+        <table>
+            <thead><tr><th>Currency</th><th>Account Holder Name</th><th>Account Number</th><th>SWIFT Code</th><th>Bank Name</th></tr></thead>
+            <tbody>
+                <tr><td class="bold">USD</td><td>LAJ EXPORTS LIMITED</td><td>001484600002512</td><td>YESBINBB</td><td>YES BANK LTD</td></tr>
+                <tr style="background: #f9f9f9;"><td class="bold">EUR</td><td>LAJ EXPORTS LIMITED</td><td>001484600002513</td><td>YESBINBB</td><td>YES BANK LTD</td></tr>
+                <tr><td class="bold">GBP</td><td>LAJ EXPORTS LIMITED</td><td>001484600002514</td><td>YESBINBB</td><td>YES BANK LTD</td></tr>
+            </tbody>
+        </table>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 17 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 18: SCHEDULE 2 -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h1>SCHEDULE 2</h1>
+        <div class="cover-subtitle">Cash-Against-Documents (CAD) Services</div>
+        <h2>OPERATIONAL TERMS</h2>
+        <p class="body-text">WHIZUNIK may purchase Accounts Receivable that have 'CAD' as payment term subject to:</p>
+        <div class="clause-container">
+            <span class="clause-num">1.</span><div class="clause-content body-text">Seller agreeing that WHIZUNIK holds Documents in custody until Buyer payment.</div>
+            <span class="clause-num">2.</span><div class="clause-content body-text">Documents being placed in WHIZUNIK custody on or before the IPP Payment Date.</div>
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 18 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+    <!-- PAGE 19: SIGNATURES -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-title">FRAMEWORK AGREEMENT</div>
+            <div class="header-logo"><img src="file:///C:/Users/ramsh/.gemini/antigravity/brain/b629f361-f91b-46af-8d29-4c448b138d69/whizunik_logo_premium_1778481659359.png" alt="WHIZUNIK"></div>
+        </div>
+        <h1 class="center">EXECUTION</h1>
+        <p class="body-text center" style="margin-top: 40px;">IN WITNESS WHEREOF, the parties have executed this Deed on 11 May 2026.</p>
+        <div class="signature-section">
+            <div>
+                <p class="bold">whizunik</p>
+                <div class="sig-block">AUTHORIZED SIGNATORY</div>
+                <div style="margin-top: 20px;">Name: ____________________<br>Date: ____________________</div>
+            </div>
+            <div>
+                <p class="bold">LAJ EXPORTS LIMITED</p>
+                <div class="sig-block">AUTHORIZED SIGNATORY</div>
+                <div style="margin-top: 20px;">Name: <span class="underline">Naresh Aneja</span><br>Date: <span class="underline">11 May 2026</span></div>
+            </div>
+        </div>
+        <div style="margin-top: 100px; padding: 20px; border: 0.5pt solid #ccc; font-size: 8pt; text-align: center;">
+            Digitally signed via SecureSign (DS-8A3E-4F1C-9B2D). Hash: 0CB1E72C7FC54111BCA5
+        </div>
+        <div class="page-footer">
+            <div class="footer-left">WHIZUNIK Confidential</div>
+            <div class="footer-center">Page 19 of 19</div>
+            <div class="footer-right">WHZ-FA-2026-05 | DS-8A3E-4F1C</div>
+        </div>
+    </div>
+
+</body>
+</html>

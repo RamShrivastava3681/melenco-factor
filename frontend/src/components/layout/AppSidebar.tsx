@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Users,
   FileText,
+  FileCheck2,
   Landmark,
   Bell,
   BarChart3,
@@ -13,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
   { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  { title: 'Framework Agreement', icon: FileCheck2, path: '/framework-agreement' },
   { title: 'Suppliers & Buyers', icon: Users, path: '/entities' },
   { title: 'Transactions', icon: FileText, path: '/transactions' },
   { title: 'Treasury', icon: Landmark, path: '/treasury' },
@@ -31,11 +33,11 @@ export function AppSidebar() {
         <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center p-1.5 shadow-lg">
           <img
             src="/logo-vertical-light (2).png"
-            alt="Whizunik Logo"
+            alt="Melenco Logo"
             className="w-full h-full object-contain"
           />
         </div>
-        <span className="ml-3 text-xl font-semibold tracking-wide">Whizunik</span>
+        <span className="ml-3 text-xl font-semibold tracking-wide">Melenco</span>
       </div>
 
       {/* Navigation */}
@@ -75,3 +77,4 @@ export function AppSidebar() {
     </aside>
   );
 }
+

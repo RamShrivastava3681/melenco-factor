@@ -1,9 +1,17 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import multer from 'multer';
 import { broadcastNotification } from '../index';
-import { TransactionModel, ITransaction, EntityModel } from '../models/schemas';
+import { ITransaction } from '../models/schemas';
 import { uploadDocumentToS3 } from '../utils/s3';
+import {
+  createTransaction,
+  deleteTransaction,
+  getEntityById,
+  getTransactionById,
+  listTransactions,
+  updateEntity
+} from '../data/dynamoRepository';
+import { isDynamoConfigured } from '../data/dynamoClient';
 
 // Mock data as fallback
 import { mockTransactions } from '../../mockData';
@@ -14,12 +22,45 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 }
 });
 
+const parseLimitValue = (value: unknown): number => {
+  const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? 0));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+};
+
+const resolveEntityIdentity = (entity: any): string[] => {
+  if (!entity) {
+    return [];
+  }
+
+  return [entity.entityId, entity.id]
+    .filter(Boolean)
+    .map((value) => String(value));
+};
+
+const getPairUtilizedAmount = async (buyerEntity: any, supplierEntity: any): Promise<number> => {
+  const buyerIds = resolveEntityIdentity(buyerEntity);
+  const supplierIds = resolveEntityIdentity(supplierEntity);
+
+  if (!buyerIds.length || !supplierIds.length) {
+    return 0;
+  }
+
+  const transactions = await listTransactions();
+  const total = transactions
+    .filter((transaction) => buyerIds.includes(String(transaction.buyerId)) && supplierIds.includes(String(transaction.supplierId)))
+    .reduce((sum, transaction) => {
+      const amount = transaction.invoiceAmount ?? transaction.invoiceValue ?? 0;
+      return sum + parseLimitValue(amount);
+    }, 0);
+
+  return parseLimitValue(total);
+};
+
 // Get all transactions - now returns stored transactions
 router.get('/', async (req, res) => {
   try {
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      console.warn('MongoDB not connected, using mock data');
+    if (!isDynamoConfigured()) {
+      console.warn('DynamoDB not configured, using mock data');
       return res.json({
         success: true,
         message: 'Transactions retrieved successfully (mock data)',
@@ -27,7 +68,7 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const transactions = await TransactionModel.find().sort({ createdAt: -1 });
+    const transactions = await listTransactions();
     res.json({
       success: true,
       message: 'Transactions retrieved successfully',
@@ -48,9 +89,7 @@ router.get('/', async (req, res) => {
 router.get('/recent', async (req, res) => {
   try {
     // Return recent transactions from database
-    const recentTransactions = await TransactionModel.find()
-      .sort({ createdAt: -1 })
-      .limit(10);
+    const recentTransactions = (await listTransactions()).slice(0, 10);
 
     res.json({
       success: true,
@@ -193,19 +232,15 @@ router.post('/', upload.array('supportingDocuments', 20), async (req, res) => {
       });
     }
 
-    const supplierEntity = await EntityModel.findOne({
-      $or: [
-        { entityId: transactionData.supplierId },
-        { _id: mongoose.Types.ObjectId.isValid(transactionData.supplierId) ? transactionData.supplierId : null }
-      ]
-    });
+    const supplierEntity = await getEntityById(String(transactionData.supplierId || ''));
+    const buyerEntity = await getEntityById(String(transactionData.buyerId || ''));
 
-    const buyerEntity = await EntityModel.findOne({
-      $or: [
-        { entityId: transactionData.buyerId },
-        { _id: mongoose.Types.ObjectId.isValid(transactionData.buyerId) ? transactionData.buyerId : null }
-      ]
-    });
+    if (!supplierEntity || !buyerEntity) {
+      return res.status(400).json({
+        success: false,
+        message: 'Supplier or buyer entity not found.'
+      });
+    }
 
     const supplierCurrency = String(supplierEntity?.currency || supplierEntity?.bankDetails?.currency || 'USD').toUpperCase();
     const buyerCurrency = String(buyerEntity?.currency || buyerEntity?.bankDetails?.currency || 'USD').toUpperCase();
@@ -223,26 +258,109 @@ router.post('/', upload.array('supportingDocuments', 20), async (req, res) => {
         message: `Transaction currency (${requestedCurrency}) must match supplier/buyer currency (${supplierCurrency}).`
       });
     }
+
+    const supplierLimit = parseLimitValue(
+      supplierEntity?.totalLimitSanctioned ?? supplierEntity?.creditLimit ?? 0
+    );
+
+    const supplierIds = resolveEntityIdentity(supplierEntity);
+    const buyerSupplierLimit = (buyerEntity?.supplierLimits || []).find((limit: any) => {
+      const configuredSupplierId = String(limit?.supplierId || '');
+      return configuredSupplierId && supplierIds.includes(configuredSupplierId);
+    });
+
+    const buyerLimit = buyerSupplierLimit
+      ? parseLimitValue(buyerSupplierLimit.transactionLimit)
+      : parseLimitValue(buyerEntity?.creditLimit ?? 0);
+
+    const supplierUsed = parseLimitValue(supplierEntity?.usedLimit ?? 0);
+    const supplierAvailable = Math.max(0, supplierLimit - supplierUsed);
+
+    const buyerGlobalLimit = parseLimitValue(buyerEntity?.creditLimit ?? 0);
+    const buyerGlobalUsed = parseLimitValue(buyerEntity?.usedCredit ?? 0);
+    const buyerGlobalAvailable = Math.max(0, buyerGlobalLimit - buyerGlobalUsed);
+
+    const buyerSupplierUsed = buyerSupplierLimit
+      ? await getPairUtilizedAmount(buyerEntity, supplierEntity)
+      : buyerGlobalUsed;
+    const buyerAvailable = Math.max(0, buyerLimit - buyerSupplierUsed);
+
+    if (invoiceAmount > supplierLimit) {
+      return res.status(400).json({
+        success: false,
+        message: `Invoice amount (${invoiceAmount}) cannot exceed supplier limit (${supplierLimit}).`
+      });
+    }
+
+    if (invoiceAmount > supplierAvailable) {
+      return res.status(400).json({
+        success: false,
+        message: `Invoice amount (${invoiceAmount}) exceeds supplier available limit (${supplierAvailable}).`
+      });
+    }
+
+    if (invoiceAmount > buyerLimit) {
+      return res.status(400).json({
+        success: false,
+        message: `Invoice amount (${invoiceAmount}) cannot exceed buyer limit (${buyerLimit}).`
+      });
+    }
+
+    if (invoiceAmount > buyerAvailable) {
+      return res.status(400).json({
+        success: false,
+        message: `Invoice amount (${invoiceAmount}) exceeds buyer available limit (${buyerAvailable}).`
+      });
+    }
+
+    if (invoiceAmount > buyerGlobalAvailable) {
+      return res.status(400).json({
+        success: false,
+        message: `Invoice amount (${invoiceAmount}) exceeds buyer remaining total credit (${buyerGlobalAvailable}).`
+      });
+    }
     
     // Create new transaction document
-    const newTransaction = new TransactionModel({
+    const newTransaction: ITransaction = {
       transactionId,
       invoiceId,
       ...transactionData,
       ...requiredFields,
       supportingDocuments: supportingDocumentKeys,
       supportingDocumentNames,
+      transactionFee: parseFloat(transactionData.transactionFee) || 0,
+      processingFee: parseFloat(transactionData.processingFee) || 0,
+      factoringFee: parseFloat(transactionData.factoringFee) || 0,
+      setupFee: parseFloat(transactionData.setupFee) || 0,
+      supplierPaymentTerms: transactionData.supplierPaymentTerms || '',
+      description: transactionData.description || '',
+      sendNOA: Boolean(transactionData.sendNOA),
       dueDate: calculatedDueDate,
       status: transactionData.status || 'pending',
       currency: requestedCurrency,
       transactionType: transactionData.transactionType || 'factoring'
-    });
+    };
     
-    console.log('Transaction document to save:', JSON.stringify(newTransaction.toObject(), null, 2));
+    console.log('Transaction document to save:', JSON.stringify(newTransaction, null, 2));
 
-    // Save to MongoDB
-    const savedTransaction = await newTransaction.save();
-    console.log(`✅ Transaction saved to MongoDB: ${savedTransaction.transactionId}, Invoice ID: ${savedTransaction.invoiceId}`);
+    const savedTransaction = await createTransaction(newTransaction);
+    console.log(`✅ Transaction saved to DynamoDB: ${savedTransaction.transactionId}, Invoice ID: ${savedTransaction.invoiceId}`);
+
+    const supplierNewUsed = supplierUsed + invoiceAmount;
+    const supplierNewAvailable = Math.max(0, supplierLimit - supplierNewUsed);
+    await updateEntity(supplierEntity.entityId, {
+      usedLimit: supplierNewUsed,
+      utilizedLimit: supplierNewUsed,
+      availableLimit: supplierNewAvailable
+    });
+
+    const buyerNewUsed = buyerGlobalUsed + invoiceAmount;
+    const buyerNewAvailable = Math.max(0, buyerGlobalLimit - buyerNewUsed);
+    await updateEntity(buyerEntity.entityId, {
+      usedCredit: buyerNewUsed,
+      utilizedLimit: buyerNewUsed,
+      availableLimit: buyerNewAvailable
+    });
 
     // Send real-time notification
     broadcastNotification({
@@ -296,22 +414,17 @@ router.delete('/:id', async (req, res) => {
     
     console.log('🗑️ Delete transaction request:', { id });
     
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({
+    const transactionToDelete = await getTransactionById(id);
+
+    if (!transactionToDelete) {
+      return res.status(404).json({
         success: false,
-        message: 'Database not connected - cannot delete transaction'
+        message: 'Transaction not found'
       });
     }
-    
-    // Find and delete the transaction
-    const deletedTransaction = await TransactionModel.findOneAndDelete({
-      $or: [
-        { transactionId: id },
-        { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }
-      ]
-    });
-    
+
+    const deletedTransaction = await deleteTransaction(transactionToDelete.transactionId);
+
     if (!deletedTransaction) {
       return res.status(404).json({
         success: false,
@@ -319,16 +432,47 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
+    const utilizedAmount = parseLimitValue(deletedTransaction?.invoiceAmount ?? deletedTransaction?.invoiceValue ?? 0);
+
+    const supplierEntity = await getEntityById(String(transactionToDelete.supplierId || ''));
+    const buyerEntity = await getEntityById(String(transactionToDelete.buyerId || ''));
+
+    if (supplierEntity && utilizedAmount > 0) {
+      const supplierLimit = parseLimitValue(supplierEntity.totalLimitSanctioned ?? supplierEntity.creditLimit ?? 0);
+      const supplierUsed = parseLimitValue(supplierEntity.usedLimit ?? 0);
+      const supplierNewUsed = Math.max(0, supplierUsed - utilizedAmount);
+      const supplierNewAvailable = Math.max(0, supplierLimit - supplierNewUsed);
+
+      await updateEntity(supplierEntity.entityId, {
+        usedLimit: supplierNewUsed,
+        utilizedLimit: supplierNewUsed,
+        availableLimit: supplierNewAvailable
+      });
+    }
+
+    if (buyerEntity && utilizedAmount > 0) {
+      const buyerLimit = parseLimitValue(buyerEntity.creditLimit ?? 0);
+      const buyerUsed = parseLimitValue(buyerEntity.usedCredit ?? 0);
+      const buyerNewUsed = Math.max(0, buyerUsed - utilizedAmount);
+      const buyerNewAvailable = Math.max(0, buyerLimit - buyerNewUsed);
+
+      await updateEntity(buyerEntity.entityId, {
+        usedCredit: buyerNewUsed,
+        utilizedLimit: buyerNewUsed,
+        availableLimit: buyerNewAvailable
+      });
+    }
+    
     console.log('✅ Transaction deleted successfully:', {
-      id: deletedTransaction._id,
-      transactionId: deletedTransaction.transactionId
+      id: transactionToDelete.transactionId,
+      transactionId: transactionToDelete.transactionId
     });
     
     // Broadcast notification about transaction deletion
     broadcastNotification({
       type: 'transaction_deleted',
       title: 'Transaction Deleted',
-      message: `Transaction ${deletedTransaction.transactionId} has been deleted`,
+      message: `Transaction ${transactionToDelete.transactionId} has been deleted`,
       timestamp: new Date(),
       priority: 'normal'
     });
@@ -337,8 +481,8 @@ router.delete('/:id', async (req, res) => {
       success: true,
       message: 'Transaction deleted successfully',
       data: {
-        id: deletedTransaction._id,
-        transactionId: deletedTransaction.transactionId
+        id: transactionToDelete.transactionId,
+        transactionId: transactionToDelete.transactionId
       }
     });
   } catch (error: any) {

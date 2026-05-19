@@ -36,11 +36,15 @@ interface SupplierPayment {
 interface PayoutHistory {
   id: string;
   supplierId: string;
+  supplierName?: string;
   amount: number;
   status: 'processing' | 'completed' | 'failed';
   createdAt: string;
   processedAt?: string;
   reference: string;
+  transactionIds?: string[];
+  type?: 'advance_payment' | 'reserve_payment';
+  method?: string;
 }
 
 interface IncomingPayment {
@@ -477,6 +481,13 @@ export default function Treasury() {
   };
 
   const handlePayReserve = async (incomingPayment: IncomingPayment) => {
+    if (incomingPayment.status !== 'reserve_sent') {
+      toast.info('Reserve payment is not ready yet', {
+        description: 'Reserve can be released only after buyer payment is fully completed.'
+      });
+      return;
+    }
+
     setSelectedIncomingPayment(incomingPayment);
     setReserveDetailsOpen(true);
   };
@@ -517,14 +528,16 @@ export default function Treasury() {
         
         // Refresh data
         await fetchIncomingPayments();
+        await fetchPayoutHistory();
         setSelectedIncomingPayment(null);
       } else {
-        throw new Error('Failed to process reserve payment');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to process reserve payment');
       }
     } catch (error) {
       console.error('Reserve payment error:', error);
       toast.error('Failed to process reserve payment', {
-        description: 'Please try again or contact support.'
+        description: error instanceof Error ? error.message : 'Please try again or contact support.'
       });
     } finally {
       setProcessing(null);
@@ -546,6 +559,10 @@ export default function Treasury() {
     };
     return variants[status] || variants.pending;
   };
+
+  const reservePaymentHistory = payoutHistory
+    .filter((payout) => payout.type === 'reserve_payment' || payout.method === 'reserve_release')
+    .slice(0, 10);
 
   return (
     <div className="space-y-6 p-6">
@@ -1212,18 +1229,78 @@ export default function Treasury() {
                               size="sm" 
                               className="btn-financial"
                               onClick={() => handlePayReserve(payment)}
-                              disabled={processing === payment.id || payment.status !== 'pending_reserve'}
+                              disabled={processing === payment.id || payment.status === 'completed'}
                             >
                               {processing === payment.id ? (
                                 <Clock className="w-4 h-4 animate-spin" />
                               ) : (
                                 <>
                                   <CreditCard className="w-4 h-4 mr-1" />
-                                  Pay Reserve
+                                  {payment.status === 'reserve_sent' ? 'Pay Reserve' : 'Check Reserve'}
                                 </>
                               )}
                             </Button>
                           </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card className="financial-card">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-financial-navy flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Reserve Payment History
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead className="font-semibold">Reference</TableHead>
+                    <TableHead className="font-semibold">Supplier</TableHead>
+                    <TableHead className="font-semibold">Amount</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">Processed Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reservePaymentHistory.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        No reserve payment history yet
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    reservePaymentHistory.map((payout) => (
+                      <TableRow key={payout.id} className="border-border">
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="font-medium text-financial-navy">{payout.reference}</p>
+                            <p className="text-xs text-muted-foreground">{payout.id}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <p className="font-medium">{payout.supplierName || payout.supplierId}</p>
+                        </TableCell>
+                        <TableCell>
+                          <p className="font-medium text-success">{formatCurrency(payout.amount)}</p>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusBadge(payout.status)}>
+                            {payout.status.charAt(0).toUpperCase() + payout.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-sm">
+                            {payout.processedAt
+                              ? new Date(payout.processedAt).toLocaleDateString()
+                              : 'Processing...'}
+                          </p>
                         </TableCell>
                       </TableRow>
                     ))

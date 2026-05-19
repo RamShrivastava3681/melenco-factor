@@ -486,7 +486,7 @@ export function NOAPage() {
               
               <div className="mt-8 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
                 <p><strong>Support Contact:</strong></p>
-                <p>Email: {noaData.partyDetails?.support?.email || 'admin@whizunik.com'}</p>
+                <p>Email: {noaData.partyDetails?.support?.email || 'admin@melenco.com'}</p>
                 <p>Phone: {noaData.partyDetails?.support?.phone || '+91-9958880183'}</p>
               </div>
             </CardContent>
@@ -612,12 +612,12 @@ export function NOAPage() {
 
         {/* Signature Section */}
         <div className="flex justify-between gap-12 mb-8">
-          {/* Left side - Whizunik signature */}
+          {/* Left side - Melenco signature */}
           <div className="w-1/2">
             <p className="font-semibold mb-4">Yours faithfully,</p>
             <div className="border border-gray-300 h-24 mb-4 bg-gray-50"></div>
             <p className="text-sm">
-              <strong>Whizunik Finance Team</strong><br />
+              <strong>Melenco Finance Team</strong><br />
               Authorized Signatory
             </p>
           </div>
@@ -760,7 +760,7 @@ export function NOAPage() {
             Print Document
           </Button>
           <p className="mt-4 text-sm text-gray-600">
-            Contact: {noaData.partyDetails?.support?.email || 'admin@whizunik.com'} | {noaData.partyDetails?.support?.phone || '+91-9958880183'}
+            Contact: {noaData.partyDetails?.support?.email || 'admin@melenco.com'} | {noaData.partyDetails?.support?.phone || '+91-9958880183'}
           </p>
         </div>
       </div>

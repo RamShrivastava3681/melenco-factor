@@ -6,11 +6,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import winston from 'winston';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import { isDynamoConfigured } from './data/dynamoClient';
 // Import routes
 import authRoutes from './routes/auth';
 import entityRoutes from './routes/entities';
@@ -19,12 +19,12 @@ import dashboardRoutes from './routes/dashboard';
 import treasuryRoutes from './routes/treasury';
 import feeLimitsRoutes from './routes/fee-limits';
 import monitoringRoutes from './routes/monitoring';
-import reportsRoutes from './routes/reports';
+import { router as reportsRoutes } from './routes/reports';
 import notificationsRoutes from './routes/notifications';
 import noaRoutes from './routes/noa';
 import currencyRoutes from './routes/currency';
 import documentsRoutes from './routes/documents';
-// Load environment variables
+// Load environment variables (force reload config)
 dotenv.config();
 // Create Express app and HTTP server
 const app = express();
@@ -172,68 +172,13 @@ app.use('*', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
-// Simple MongoDB connection with quick fallback
-const connectDB = async () => {
-  try {
-    mongoose.set('strictQuery', false);
-    // Add connection event listeners
-    mongoose.connection.on('connected', () => {
-      logger.info('🟢 Connected to MongoDB Atlas successfully');
-    });
-    mongoose.connection.on('error', (err) => {
-      logger.warn('🔴 MongoDB connection error - using mock data');
-    });
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('🟡 Disconnected from MongoDB - using mock data');
-    });
-    // Try MongoDB Atlas connection with short timeout
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/whizunik-factoring';
-    await Promise.race([
-      mongoose.connect(mongoURI, {
-        family: 4, // Force IPv4
-        serverSelectionTimeoutMS: 15000,
-        connectTimeoutMS: 15000,
-        maxPoolSize: 10,
-        socketTimeoutMS: 10000,
-        bufferCommands: true, // Allow queuing operations
-        retryWrites: true,
-        retryReads: true
-      }),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout')), 15000)
-      )
-    ]);
-    logger.info('✅ MongoDB Atlas connected successfully');
-    logger.info(`📊 Database: ${mongoose.connection.name || 'whizunik'}`);
-    return true;
-  } catch (error) {
-    logger.warn('⚠️ MongoDB unavailable - continuing with mock data mode');
-    logger.info('💡 All features work normally with mock data');
-    return false;
-  }
-};
-// Graceful shutdown handler
-process.on('SIGINT', async () => {
-  logger.info('🔄 Shutting down gracefully...');
-  try {
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.connection.close();
-      logger.info('🔴 MongoDB connection closed');
-    }
-  } catch (e) {
-    logger.warn('Warning: Error closing MongoDB connection');
-  }
-  process.exit(0);
-});
 // Start server
 const startServer = async () => {
   try {
-    // Try to connect to MongoDB (non-blocking)
-    const isMongoConnected = await connectDB();
-    if (isMongoConnected) {
-      logger.info('✅ MongoDB connection established - Data will be persisted');
+    if (isDynamoConfigured()) {
+      logger.info('✅ DynamoDB configuration detected - Data will be persisted');
     } else {
-      logger.info('📊 Running in development mode - Using mock data');
+      logger.warn('⚠️ DynamoDB not configured - falling back to mock data where available');
     }
     server.listen(PORT, () => {
       logger.info(`🚀 Whizunik Factoring Backend running on port ${PORT}`);
@@ -249,9 +194,8 @@ const startServer = async () => {
     process.exit(1);
   }
 };
-process.on('SIGINT', async () => {
+process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
-  await mongoose.disconnect();
   process.exit(0);
 });
 // Start the server

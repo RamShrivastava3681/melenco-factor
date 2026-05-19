@@ -24,6 +24,8 @@ interface InvoicePaymentDialogProps {
     status: string;
     agingDays: number;
     daysUntilExpiry: number;
+    lateFees?: number;
+    totalAmountDue?: number;
     paymentHistory: Array<{
       id: string;
       amount: number;
@@ -31,6 +33,7 @@ interface InvoicePaymentDialogProps {
       paidBy: string;
       reference?: string;
       notes?: string;
+      lateFeesPaid?: number;
     }>;
     reference: string;
   };
@@ -77,13 +80,14 @@ export default function InvoicePaymentDialog({ invoice, onPaymentRecorded, onClo
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    const limit = invoice.totalAmountDue ?? invoice.remainingAmount;
     
     if (!formData.amount) {
       newErrors.amount = 'Payment amount is required';
     } else if (parseFloat(formData.amount) <= 0) {
       newErrors.amount = 'Payment amount must be greater than 0';
-    } else if (parseFloat(formData.amount) > invoice.remainingAmount) {
-      newErrors.amount = `Payment amount cannot exceed remaining amount of $${invoice.remainingAmount.toLocaleString()}`;
+    } else if (parseFloat(formData.amount) > limit) {
+      newErrors.amount = `Payment amount cannot exceed total outstanding amount of $${limit.toLocaleString()}`;
     }
     
     if (!formData.paidAt) {
@@ -199,13 +203,25 @@ export default function InvoicePaymentDialog({ invoice, onPaymentRecorded, onClo
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Paid Amount:</span>
+                  <span className="text-sm text-gray-600">Paid Amount (Principal):</span>
                   <span className="text-green-600 font-medium">${invoice.paidAmount.toLocaleString()}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Remaining Amount:</span>
-                  <span className="text-red-600 font-medium">${invoice.remainingAmount.toLocaleString()}</span>
+                  <span className="text-sm text-gray-600">Remaining Principal:</span>
+                  <span className="text-gray-900 font-medium">${invoice.remainingAmount.toLocaleString()}</span>
+                </div>
+
+                {invoice.lateFees !== undefined && invoice.lateFees > 0 && (
+                  <div className="flex justify-between text-orange-600 font-medium">
+                    <span className="text-sm">Outstanding Late Fees:</span>
+                    <span>${invoice.lateFees.toLocaleString()}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between">
+                  <span className="text-sm font-semibold text-gray-800">Total Outstanding Due:</span>
+                  <span className="text-red-600 font-bold">${(invoice.totalAmountDue ?? invoice.remainingAmount).toLocaleString()}</span>
                 </div>
               </div>
               
@@ -243,7 +259,7 @@ export default function InvoicePaymentDialog({ invoice, onPaymentRecorded, onClo
                     type="number"
                     step="0.01"
                     min="0.01"
-                    max={invoice.remainingAmount}
+                    max={invoice.totalAmountDue ?? invoice.remainingAmount}
                     placeholder="Enter amount received"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
@@ -322,9 +338,14 @@ export default function InvoicePaymentDialog({ invoice, onPaymentRecorded, onClo
                           try {
                             return payment.paidAt ? format(new Date(payment.paidAt), 'MMM dd, yyyy') : 'Unknown date';
                           } catch (error) {
-                            return formatDate(payment.paidAt);
+                            return payment.paidAt ? new Date(payment.paidAt).toLocaleDateString() : 'Unknown date';
                           }
                         })()} by {payment.paidBy}
+                        {payment.lateFeesPaid !== undefined && payment.lateFeesPaid > 0 && (
+                          <span className="text-orange-600 font-medium ml-2">
+                            (incl. ${payment.lateFeesPaid.toLocaleString()} late fees)
+                          </span>
+                        )}
                       </div>
                       {payment.notes && (
                         <div className="text-sm text-gray-500 mt-1">{payment.notes}</div>

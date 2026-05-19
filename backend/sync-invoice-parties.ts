@@ -5,9 +5,15 @@ import crypto from 'node:crypto';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import * as XLSX from 'xlsx';
-import { EntityModel, TransactionModel } from './src/models/schemas';
+import { IEntity, ITransaction } from './src/models/schemas';
 
 const { PDFParse } = require('pdf-parse');
+
+const entitySchema = new mongoose.Schema<IEntity>({}, { strict: false });
+const transactionSchema = new mongoose.Schema<ITransaction>({}, { strict: false });
+
+const EntityModel = mongoose.model<IEntity>('Entity', entitySchema);
+const TransactionModel = mongoose.model<ITransaction>('Transaction', transactionSchema);
 
 dotenv.config();
 dns.setServers(['8.8.8.8', '1.1.1.1']);

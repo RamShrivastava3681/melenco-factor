@@ -1,6 +1,6 @@
 import { createApiUrl, getApiHeaders } from '@/config/api';
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -124,7 +124,7 @@ export function AddBuyerDialog({ open, onOpenChange }: AddBuyerDialogProps) {
       const normalizedCurrency = String(value || 'USD').toUpperCase();
       if (formData.supplierLimits.length > 0) {
         const hasMismatch = formData.supplierLimits.some((limit) => {
-          const supplier = suppliers.find((item) => (item.id || item._id) === limit.supplierId);
+          const supplier = suppliers.find((item) => (item.entityId || item.id || item._id) === limit.supplierId);
           if (!supplier) return false;
           return getEntityCurrency(supplier) !== normalizedCurrency;
         });
@@ -148,7 +148,7 @@ export function AddBuyerDialog({ open, onOpenChange }: AddBuyerDialogProps) {
       return;
     }
 
-    const supplier = suppliers.find(s => (s.id || s._id) === selectedSupplierId);
+    const supplier = suppliers.find(s => (s.entityId || s.id || s._id) === selectedSupplierId);
     if (!supplier) {
       console.error('Supplier not found for ID:', selectedSupplierId);
       toast.error('Selected supplier not found. Please try again.');
@@ -162,8 +162,8 @@ export function AddBuyerDialog({ open, onOpenChange }: AddBuyerDialogProps) {
       return;
     }
 
-    // Check if supplier is already added - handle both id and _id
-    const supplierId = supplier.id || supplier._id;
+    // Check if supplier is already added - handle entityId, id and _id
+    const supplierId = supplier.entityId || supplier.id || supplier._id;
     if (formData.supplierLimits.some(sl => sl.supplierId === supplierId)) {
       toast.error('This supplier is already linked to this buyer');
       return;
@@ -285,6 +285,9 @@ export function AddBuyerDialog({ open, onOpenChange }: AddBuyerDialogProps) {
           <DialogTitle className="text-xl font-semibold text-financial-navy">
             Add New Buyer
           </DialogTitle>
+          <DialogDescription className="hidden">
+            Fill out the form below to add a new buyer to the system.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -521,11 +524,11 @@ export function AddBuyerDialog({ open, onOpenChange }: AddBuyerDialogProps) {
                         ) : (
                           suppliers
                             .filter(supplier => {
-                              const supplierId = supplier.id || supplier._id;
+                              const supplierId = supplier.entityId || supplier.id || supplier._id;
                               return !formData.supplierLimits.some(sl => sl.supplierId === supplierId);
                             })
                             .map((supplier) => {
-                              const supplierId = supplier.id || supplier._id;
+                              const supplierId = supplier.entityId || supplier.id || supplier._id;
                               const supplierName = supplier.name || supplier.legalName || 'Unknown Supplier';
                               
                               if (!supplierId) {

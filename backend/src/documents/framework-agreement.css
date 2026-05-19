@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 9.2pt;
+    line-height: 1.35;
+    color: #0b0f1a;
+    margin: 0;
+}
+
+.content {
+    padding: 84px 42px 54px 42px;
+}
+
+.header {
+    position: fixed;
+    top: 24px;
+    left: 42px;
+    right: 42px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.2px solid #1f8a8a;
+    padding-bottom: 8px;
+    font-weight: bold;
+}
+
+.header-left {
+    color: #1f8a8a;
+    font-size: 12pt;
+}
+
+.header-right {
+    color: #0b1f3a;
+    font-size: 10pt;
+}
+
+.footer {
+    position: fixed;
+    bottom: 18px;
+    left: 42px;
+    right: 42px;
+    border-top: 0.8px solid #d1d5db;
+    padding-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5pt;
+    color: #6b7280;
+    font-style: italic;
+}
+
+h1 {
+    font-size: 18pt;
+    text-align: center;
+    font-weight: bold;
+    color: #0b1f3a;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    margin-top: 6px;
+    font-size: 12pt;
+    text-align: center;
+    font-weight: bold;
+    color: #6b7280;
+}
+
+h2 {
+    font-size: 12pt;
+    font-weight: bold;
+    color: #0b1f3a;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    border-bottom: 0.8px solid #e5e7eb;
+    padding-bottom: 4px;
+}
+
+h3 {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #0b1f3a;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+p {
+    text-align: justify;
+    margin-bottom: 6px;
+}
+
+.clause {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 5px;
+}
+
+.clause-number {
+    width: 36px;
+    font-weight: bold;
+    color: #0b1f3a;
+    padding-top: 1px;
+}
+
+.clause-text {
+    flex: 1;
+    text-align: justify;
+}
+
+.definition {
+    display: flex;
+    margin-bottom: 5px;
+}
+
+.definition-term {
+    width: 140px;
+    font-weight: bold;
+    color: #0b1f3a;
+    padding-top: 1px;
+}
+
+.definition-text {
+    flex: 1;
+    text-align: justify;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 0.8px solid #d1d5db;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+th, td {
+    padding: 7px;
+    border-right: 0.6px solid #e5e7eb;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f5f7;
+    font-weight: bold;
+    color: #0b1f3a;
+    border-bottom: 0.8px solid #d1d5db;
+}
+
+tr {
+    border-bottom: 0.6px solid #e5e7eb;
+}
+
+td:last-child, th:last-child {
+    border-right: 0;
+}
+
+ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.page-break {
+    page-break-before: always;
+}

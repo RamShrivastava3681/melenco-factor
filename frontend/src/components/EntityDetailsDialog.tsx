@@ -74,10 +74,7 @@ export function EntityDetailsDialog({ open, onOpenChange, entity }: EntityDetail
     }
   }, [open, entity]);
 
-  console.log('🔧 EntityDetailsDialog props:', { open, entity: !!entity, entityId: entity?.id });
-  
   if (!entity) {
-    console.log('⚠️ EntityDetailsDialog: No entity provided, returning null');
     return null;
   }
 

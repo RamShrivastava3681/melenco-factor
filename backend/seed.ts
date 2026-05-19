@@ -1,23 +1,20 @@
-import mongoose from 'mongoose';
-import { EntityModel } from './src/models/schemas';
+import { createEntity } from './src/data/dynamoRepository';
+import { isDynamoConfigured } from './src/data/dynamoClient';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const seedData = async () => {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/whizunik-factoring');
-    console.log('Connected to MongoDB for seeding');
-
-    // Clear existing data (optional - remove this if you want to preserve existing data)
-    await EntityModel.deleteMany({});
-    console.log('Cleared existing entity data');
+    if (!isDynamoConfigured()) {
+      throw new Error('DynamoDB is not configured. Set AWS_REGION and DYNAMODB_TABLE.');
+    }
 
     // Create the supplier entity that was in your in-memory array
-    const supplierEntity = new EntityModel({
+    const supplierEntity = {
       entityId: 'SUPPLIER-185723',
       name: 'Ram Shrivastava',
+      currency: 'USD' as const,
       type: 'supplier',
       status: 'active',
       riskCategory: 'medium',
@@ -56,15 +53,16 @@ const seedData = async () => {
       collateralTaken: false,
       lateFees: '1',
       lateFeesFrequency: 'monthly'
-    });
+    };
 
-    await supplierEntity.save();
+    await createEntity(supplierEntity as any);
     console.log('Seeded supplier entity:', supplierEntity.name);
 
     // Add a sample buyer entity for testing
-    const buyerEntity = new EntityModel({
+    const buyerEntity = {
       entityId: 'BUYER-123456',
       name: 'Sample Buyer Corp',
+      currency: 'USD' as const,
       type: 'buyer',
       status: 'active',
       riskCategory: 'low',
@@ -103,9 +101,9 @@ const seedData = async () => {
       collateralTaken: false,
       lateFees: '1.5',
       lateFeesFrequency: 'monthly'
-    });
+    };
 
-    await buyerEntity.save();
+    await createEntity(buyerEntity as any);
     console.log('Seeded buyer entity:', buyerEntity.name);
 
     console.log('✅ Database seeding completed successfully');
@@ -113,8 +111,7 @@ const seedData = async () => {
   } catch (error) {
     console.error('Seeding error:', error);
   } finally {
-    await mongoose.disconnect();
-    console.log('Disconnected from MongoDB');
+    console.log('Seed script completed');
   }
 };
 

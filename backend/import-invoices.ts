@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import dns from 'node:dns';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { TransactionModel } from './src/models/schemas';
+import { createTransaction } from './src/data/dynamoRepository';
+import { isDynamoConfigured } from './src/data/dynamoClient';
 
 dotenv.config();
 dns.setServers(['8.8.8.8', '1.1.1.1']);
@@ -49,11 +49,6 @@ const toInvoiceDefaults = (fileName: string, index: number): InvoiceSeed => {
 };
 
 const importInvoices = async () => {
-  const mongoCandidates = [
-    process.env.MONGODB_URI,
-    'mongodb://127.0.0.1:27017/whizunik-factoring',
-    'mongodb://localhost:27017/whizunik-factoring'
-  ].filter((uri): uri is string => Boolean(uri));
   const invoicesDir = path.resolve(__dirname, '../invoices');
 
   if (!fs.existsSync(invoicesDir)) {
@@ -69,32 +64,11 @@ const importInvoices = async () => {
     throw new Error('No .pdf/.xls invoice files found in invoices directory.');
   }
 
-  let connected = false;
-  let lastError: unknown;
-
-  for (const mongoUri of mongoCandidates) {
-    try {
-      await mongoose.connect(mongoUri, {
-        family: 4,
-        serverSelectionTimeoutMS: 15000,
-        connectTimeoutMS: 15000
-      });
-      connected = true;
-      console.log(`Connected using URI: ${mongoUri.replace(/:\/\/.*@/, '://***@')}`);
-      break;
-    } catch (error) {
-      lastError = error;
-      if (mongoose.connection.readyState !== 0) {
-        await mongoose.disconnect();
-      }
-    }
+  if (!isDynamoConfigured()) {
+    throw new Error('DynamoDB is not configured. Set AWS_REGION and DYNAMODB_TABLE.');
   }
 
-  if (!connected) {
-    throw lastError;
-  }
-
-  console.log(`Connected to MongoDB: ${mongoose.connection.name}`);
+  console.log('Using DynamoDB for invoice import');
   console.log(`Importing ${invoiceFiles.length} invoice files...`);
 
   let upsertedCount = 0;
@@ -130,7 +104,7 @@ const importInvoices = async () => {
       factoringFee: 0,
       setupFee: 0,
       supplierPaymentTerms: '45',
-      description: 'Imported from invoices folder into MongoDB',
+      description: 'Imported from invoices folder into DynamoDB',
       status: 'settled',
       transactionType: 'factoring',
       supportingDocuments: [fileName],
@@ -155,11 +129,7 @@ const importInvoices = async () => {
       ]
     };
 
-    await TransactionModel.updateOne(
-      { invoiceNumber: fileName },
-      { $set: doc },
-      { upsert: true }
-    );
+    await createTransaction(doc);
 
     upsertedCount += 1;
     console.log(`Upserted ${fileName} as ${transactionId}`);
@@ -174,11 +144,7 @@ if (require.main === module) {
       console.error('Invoice import failed:', error);
       process.exitCode = 1;
     })
-    .finally(async () => {
-      if (mongoose.connection.readyState !== 0) {
-        await mongoose.disconnect();
-      }
-    });
+    .finally(() => undefined);
 }
 
 export default importInvoices;
