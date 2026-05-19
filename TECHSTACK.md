@@ -19,10 +19,10 @@ Whizunik Factoring is a professional factoring operations portal built as a mono
 ### Database & ORM
 | Technology | Version | Purpose | Usage Location |
 |------------|---------|---------|-----------------|
-| **MongoDB** | (via Mongoose) | NoSQL database for document storage | `backend/src/models/schemas.ts` - Data persistence |
-| **Mongoose** | ^9.1.5 | MongoDB object modeling toolkit | `backend/src/models/schemas.ts` - Schema definitions (Entities, Transactions, Framework Agreements, etc.) |
+| **DynamoDB** | (AWS SDK v3) | NoSQL table storage | `backend/src/data/dynamoRepository.ts` - Data persistence |
+| **AWS SDK (DynamoDB)** | ^3.1029.0 | DynamoDB client + document mapper | `backend/src/data/dynamoClient.ts` - Client configuration |
 
-**MongoDB Collections & Models:**
+**DynamoDB Item Types (single-table):**
 - **Entity**: Stores supplier and buyer information with limits and risk assessment
 - **Transaction**: Records factoring transactions with invoice details, fees, and reserves
 - **FrameworkAgreement**: Stores agreement data with signing status and timestamps
@@ -260,7 +260,6 @@ Whizunik Factoring is a professional factoring operations portal built as a mono
 | **compression** | ^1.7.5 | Response compression | `frontend/` - Reduce bundle size |
 | **helmet** | ^7.1.0 | Security headers | `frontend/` - HTTP security |
 | **express-rate-limit** | ^7.4.2 | API rate limiting | `frontend/` - Prevent abuse |
-| **mongoose** | ^8.8.4 | Database modeling | `frontend/` - Shared models |
 | **nodemailer** | ^6.9.16 | Email sending | `frontend/` - Email notifications |
 | **winston** | ^3.17.0 | Logging | `frontend/` - Application logging |
 
@@ -951,7 +950,7 @@ whizunik-factoring/
 │   │   │   ├── currency.ts             # Exchange rates
 │   │   │   └── treasury-management.ts  # Advanced treasury
 │   │   ├── models/
-│   │   │   ├── schemas.ts              # Mongoose schemas
+│   │   │   ├── schemas.ts              # TypeScript interfaces
 │   │   │   └── index.ts                # Model exports
 │   │   ├── utils/
 │   │   │   ├── s3.ts                   # AWS S3 operations
@@ -1010,13 +1009,13 @@ whizunik-factoring/
 ### Backend `.env`
 ```env
 PORT=6767
-MONGODB_URI=mongodb://...
+AWS_REGION=us-east-1
+DYNAMODB_TABLE=whizunik-factoring
 JWT_SECRET=your_jwt_secret
 ADMIN_EMAIL=admin@whizunik.com
 ADMIN_PASSWORD=admin_password
 
 # AWS S3
-AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_S3_BUCKET=whizunik-documents
@@ -1066,7 +1065,7 @@ npm run clean
 ### Production Deployment
 - Backend: Node.js server runs on port 6767
 - Frontend: Static build artifacts served via Vite preview
-- Database: MongoDB connection via Mongoose
+- Database: DynamoDB via AWS SDK
 - Storage: AWS S3 for documents and PDFs
 - Email: SMTP configured for notifications
 - Logging: Winston logs to `../logs/` directory

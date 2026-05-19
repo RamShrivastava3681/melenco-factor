@@ -140,7 +140,7 @@ router.get('/invoices', async (req, res) => {
         res.json({
             success: true,
             data: [],
-            message: 'Treasury invoices functionality is being migrated to MongoDB'
+            message: 'Treasury invoices functionality is being migrated to DynamoDB'
         });
     }
     catch (error) {
@@ -1007,7 +1007,7 @@ router.post('/payouts', async (req, res) => {
     try {
         res.json({
             success: true,
-            message: 'Payout creation functionality is being migrated to MongoDB',
+            message: 'Payout creation functionality is being migrated to DynamoDB',
             data: null
         });
     }
@@ -1023,7 +1023,7 @@ router.get('/invoices/:id', async (req, res) => {
     try {
         res.json({
             success: true,
-            message: 'Invoice details functionality is being migrated to MongoDB',
+            message: 'Invoice details functionality is being migrated to DynamoDB',
             data: null
         });
     }
@@ -1039,7 +1039,7 @@ router.put('/invoices/:id/payment', async (req, res) => {
     try {
         res.json({
             success: true,
-            message: 'Invoice payment functionality is being migrated to MongoDB'
+            message: 'Invoice payment functionality is being migrated to DynamoDB'
         });
     }
     catch (error) {
@@ -1054,7 +1054,7 @@ router.post('/invoices/:id/close', async (req, res) => {
     try {
         res.json({
             success: true,
-            message: 'Invoice closure functionality is being migrated to MongoDB'
+            message: 'Invoice closure functionality is being migrated to DynamoDB'
         });
     }
     catch (error) {
@@ -1069,7 +1069,7 @@ router.all('/payouts/*', async (req, res) => {
     try {
         res.json({
             success: true,
-            message: 'Payout operations functionality is being migrated to MongoDB'
+            message: 'Payout operations functionality is being migrated to DynamoDB'
         });
     }
     catch (error) {

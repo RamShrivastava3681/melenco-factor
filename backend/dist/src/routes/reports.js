@@ -1030,7 +1030,7 @@ exports.router.get('/compliance', async (req, res) => {
                     lowRiskCount: entities,
                     averageRiskScore: 0
                 },
-                message: 'Compliance reports functionality is being migrated to MongoDB'
+                message: 'Compliance reports functionality is being migrated to DynamoDB'
             }
         });
     }
@@ -1053,9 +1053,9 @@ exports.router.get('/risk', async (req, res) => {
                     concentrationLimitBreaches: 0
                 },
                 recommendations: [
-                    'Risk reports functionality is being migrated to MongoDB'
+                    'Risk reports functionality is being migrated to DynamoDB'
                 ],
-                message: 'Risk reports functionality is being migrated to MongoDB'
+                message: 'Risk reports functionality is being migrated to DynamoDB'
             }
         });
     }
@@ -1083,7 +1083,7 @@ exports.router.get('/performance', async (req, res) => {
                     overdue: { count: 0, percentage: 0 },
                     active: { count: 0, percentage: 0 }
                 },
-                message: 'Performance reports functionality is being migrated to MongoDB'
+                message: 'Performance reports functionality is being migrated to DynamoDB'
             }
         });
     }
@@ -1104,7 +1104,7 @@ exports.router.get('/financial', async (req, res) => {
                 totalRevenue: totalFees || 0,
                 totalExpenses: 0,
                 netProfit: totalFees || 0,
-                message: 'Financial reports functionality is being migrated to MongoDB'
+                message: 'Financial reports functionality is being migrated to DynamoDB'
             }
         });
     }
@@ -1136,7 +1136,7 @@ exports.router.get('/entities', async (req, res) => {
                     suppliers: allEntities.filter((entity) => entity.type === 'supplier').length,
                     buyers: allEntities.filter((entity) => entity.type === 'buyer').length
                 },
-                message: 'Entity reports functionality is being migrated to MongoDB'
+                message: 'Entity reports functionality is being migrated to DynamoDB'
             }
         });
     }
@@ -1152,7 +1152,7 @@ exports.router.get('/*', async (req, res) => {
     try {
         res.json({
             success: true,
-            message: 'Reports functionality is being migrated to MongoDB',
+            message: 'Reports functionality is being migrated to DynamoDB',
             data: null
         });
     }

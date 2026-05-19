@@ -7,13 +7,12 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "nodemon --exec ts-node src/index.ts",
-    "start:prod": "node dist/index.js",
+    "start:prod": "node dist/src/index.js",
     "start:dev": "ts-node src/index.ts",
     "watch": "tsc --watch",
     "clean": "rimraf dist",
     "seed": "ts-node seed.ts",
-    "import:invoices": "ts-node import-invoices.ts",
-    "sync:invoice-parties": "ts-node sync-invoice-parties.ts"
+    "import:invoices": "ts-node import-invoices.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1029.0",
@@ -68,8 +67,7 @@
     "finance",
     "api",
     "nodejs",
-    "express",
-    "mongodb"
+    "express"
   ],
   "author": "Whizunik",
   "license": "MIT"

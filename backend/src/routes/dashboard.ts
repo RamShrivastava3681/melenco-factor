@@ -3,10 +3,10 @@ import { listEntities, listTransactions } from '../data/dynamoRepository';
 
 const router = express.Router();
 
-// Dashboard KPIs - now returns data from MongoDB
+// Dashboard KPIs - returns data from DynamoDB
 router.get('/kpis', async (req, res) => {
   try {
-    // Calculate KPIs from MongoDB data
+    // Calculate KPIs from DynamoDB data
     const transactions = await listTransactions();
     const entities = await listEntities();
 

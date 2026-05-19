@@ -126,7 +126,7 @@ export default function Entities() {
         // Normalize backend entities to have consistent ID field
         const normalizedBackendEntities = backendEntities.map(entity => ({
           ...entity,
-          id: entity._id || entity.id, // Use MongoDB _id as the primary identifier
+          id: entity._id || entity.id, // Prefer backend-provided identifiers when available
           entityId: entity.entityId || entity.id || entity._id // Keep entityId for reference
         }));
         

@@ -77,7 +77,7 @@ npm run start:backend
 
 ### Backend (`/backend`)
 - **Framework:** Node.js + Express + TypeScript
-- **Database:** MongoDB with Mongoose ODM
+- **Database:** DynamoDB (AWS SDK)
 - **Authentication:** JWT tokens
 - **Security:** Helmet, CORS, Rate limiting
 - **Logging:** Winston with audit trails
@@ -108,12 +108,12 @@ npm run start:backend
 3. **Backend API Development:**
    - API available at `http://localhost:6767`
    - Auto-restart on file changes
-   - MongoDB connection required
+   - DynamoDB configuration required (`AWS_REGION`, `DYNAMODB_TABLE`)
 
 4. **Database Setup:**
-   - Install MongoDB locally or use MongoDB Atlas
-   - Update connection string in backend/.env
-   - Database will be created automatically
+   - Configure AWS credentials for DynamoDB access
+   - Set `AWS_REGION` and `DYNAMODB_TABLE` in backend/.env
+   - DynamoDB table must exist
 
 ## 🚀 Production Deployment
 
@@ -137,7 +137,8 @@ VITE_API_BASE_URL=http://localhost:6767
 ### Backend (`/backend/.env`)
 ```
 PORT=6767
-MONGODB_URI=mongodb://localhost:27017/whizunik-factoring
+AWS_REGION=us-east-1
+DYNAMODB_TABLE=whizunik-factoring
 JWT_SECRET=your-super-secret-jwt-key
 NODE_ENV=development
 ```
@@ -158,8 +159,7 @@ NODE_ENV=development
 - Node.js
 - Express.js
 - TypeScript
-- MongoDB
-- Mongoose
+- DynamoDB (AWS SDK)
 - JWT Authentication
 - Winston Logging
 - Helmet Security
@@ -199,7 +199,7 @@ For technical support or questions about the Whizunik Factoring platform, please
 
 ### Backend Stack
 - **Node.js** + **Express** + **TypeScript**
-- **MongoDB** with **Mongoose** ODM
+- **DynamoDB** with AWS SDK
 - **JWT** authentication with role-based permissions
 - **Winston** logging with financial audit trails
 - **Helmet** + **CORS** + rate limiting for security

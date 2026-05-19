@@ -31,7 +31,7 @@ const normalizeBankDetails = (bankDetails: any, fallbackName: string, fallbackCu
   currency: String(bankDetails?.currency || fallbackCurrency || 'USD')
 });
 
-// Get treasury metrics with basic MongoDB queries
+// Get treasury metrics with basic DynamoDB queries
 router.get('/metrics', async (req, res) => {
   try {
     const transactions = await listTransactions();
@@ -159,7 +159,7 @@ router.get('/invoices', async (req, res) => {
     res.json({
       success: true,
       data: [],
-      message: 'Treasury invoices functionality is being migrated to MongoDB'
+      message: 'Treasury invoices functionality is being migrated to DynamoDB'
     });
   } catch (error) {
     console.error('Treasury invoices error:', error);
@@ -189,7 +189,7 @@ const calculateLateFees = async (transaction: any) => {
   }
 
   try {
-    // Get buyer entity to check late fee configuration. Support both business entityId and MongoDB ObjectId.
+    // Get buyer entity to check late fee configuration. Support both business entityId and legacy ids.
     const buyerId = String(transaction.buyerId || '');
     const buyer = await getEntityById(buyerId);
 
@@ -978,7 +978,7 @@ router.get('/supplier-summary', async (req, res) => {
         }
         
         // Get transactions that need funding (approved but not yet funded)
-        // Look for both entityId and MongoDB _id as supplierId for backward compatibility
+        // Look for both entityId and legacy ids as supplierId for backward compatibility
         const transactions = allTransactions.filter((transaction) =>
           String(transaction.status || '').toLowerCase() === 'approved' &&
           Boolean(transaction.paymentDue) &&
@@ -1181,7 +1181,7 @@ router.post('/payouts', async (req, res) => {
   try {
     res.json({
       success: true,
-      message: 'Payout creation functionality is being migrated to MongoDB',
+      message: 'Payout creation functionality is being migrated to DynamoDB',
       data: null
     });
   } catch (error) {
@@ -1198,7 +1198,7 @@ router.get('/invoices/:id', async (req, res) => {
   try {
     res.json({
       success: true,
-      message: 'Invoice details functionality is being migrated to MongoDB',
+      message: 'Invoice details functionality is being migrated to DynamoDB',
       data: null
     });
   } catch (error) {
@@ -1215,7 +1215,7 @@ router.put('/invoices/:id/payment', async (req, res) => {
   try {
     res.json({
       success: true,
-      message: 'Invoice payment functionality is being migrated to MongoDB'
+      message: 'Invoice payment functionality is being migrated to DynamoDB'
     });
   } catch (error) {
     console.error('Treasury invoice payment error:', error);
@@ -1231,7 +1231,7 @@ router.post('/invoices/:id/close', async (req, res) => {
   try {
     res.json({
       success: true,
-      message: 'Invoice closure functionality is being migrated to MongoDB'
+      message: 'Invoice closure functionality is being migrated to DynamoDB'
     });
   } catch (error) {
     console.error('Treasury invoice closure error:', error);
@@ -1247,7 +1247,7 @@ router.all('/payouts/*', async (req, res) => {
   try {
     res.json({
       success: true,
-      message: 'Payout operations functionality is being migrated to MongoDB'
+      message: 'Payout operations functionality is being migrated to DynamoDB'
     });
   } catch (error) {
     console.error('Treasury payout operations error:', error);
