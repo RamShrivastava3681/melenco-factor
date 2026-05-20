@@ -1,4 +1,4 @@
-# Whizunik Factoring
+# Melenco Factoring
 
 A professional factoring operations portal with separate backend and frontend applications.
 
@@ -6,7 +6,7 @@ A professional factoring operations portal with separate backend and frontend ap
 
 ```
 
-whizunik-factoring/
+Melenco-factoring/
 ├── frontend/          # React + TypeScript + Vite frontend
 ├── backend/           # Node.js + Express + TypeScript backend
 ├── package.json       # Root package.json for monorepo management
