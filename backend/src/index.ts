@@ -1,3 +1,8 @@
+console.log('AWS_REGION:', process.env.AWS_REGION);
+console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_ACCESS_KEY_ID ? 'Loaded' : 'Not Loaded');
+console.log('AWS_SECRET_ACCESS_KEY:', process.env.AWS_SECRET_ACCESS_KEY ? 'Loaded' : 'Not Loaded');
+console.log('DYNAMODB_TABLE:', process.env.DYNAMODB_TABLE);
+
 // Force DNS to Google/Cloudflare to bypass IPv4/IPv6 resolution issues
 const dns = require('node:dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
@@ -7,6 +12,9 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
 import winston from 'winston';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
@@ -25,7 +33,6 @@ import noaRoutes from './routes/noa';
 import currencyRoutes from './routes/currency';
 import documentsRoutes from './routes/documents';
 // Load environment variables (force reload config)
-dotenv.config();
 // Create Express app and HTTP server
 const app = express();
 const server = createServer(app);

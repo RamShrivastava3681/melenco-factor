@@ -37,9 +37,9 @@ export default function Settings() {
 
   // User management state
   const [users, setUsers] = useState([
-    { id: '1', name: 'John Doe', email: 'john@melenco.com', role: 'Administrator', status: 'Active', lastLogin: '2026-01-05 09:30' },
-    { id: '2', name: 'Jane Smith', email: 'jane@melenco.com', role: 'Manager', status: 'Active', lastLogin: '2026-01-04 14:20' },
-    { id: '3', name: 'Bob Johnson', email: 'bob@melenco.com', role: 'Analyst', status: 'Inactive', lastLogin: '2026-01-02 11:15' },
+    { id: '1', name: 'John Doe', email: 'john@whizunik.com', role: 'Administrator', status: 'Active', lastLogin: '2026-01-05 09:30' },
+    { id: '2', name: 'Jane Smith', email: 'jane@whizunik.com', role: 'Manager', status: 'Active', lastLogin: '2026-01-04 14:20' },
+    { id: '3', name: 'Bob Johnson', email: 'bob@whizunik.com', role: 'Analyst', status: 'Inactive', lastLogin: '2026-01-02 11:15' },
   ]);
 
   // Security settings state

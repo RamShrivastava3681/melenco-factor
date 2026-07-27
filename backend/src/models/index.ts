@@ -127,6 +127,7 @@ export interface Transaction {
   createdBy: string;
   approvedBy?: string;
   approvedAt?: Date;
+  relatedTransactionId?: string; // To link buyer and supplier transactions
 }
 
 export interface TransactionFee {

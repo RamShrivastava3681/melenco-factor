@@ -19,10 +19,10 @@ interface HelpStep {
 const helpSteps: HelpStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Melenco Factoring',
+    title: 'Welcome to Whizunik Factoring',
     description: 'Your comprehensive trade finance operations portal',
     icon: Home,
-    content: 'Melenco Factoring is a complete trade finance management platform that streamlines your operations from entity management to final reporting. This interactive guide will walk you through all the key features and functionality.',
+    content: 'Whizunik Factoring is a complete trade finance management platform that streamlines your operations from entity management to final reporting. This interactive guide will walk you through all the key features and functionality.',
     features: [
       'Real-time transaction monitoring',
       'Automated fee calculations',
@@ -239,7 +239,7 @@ export function DashboardHelpSystem({ isOpen, onClose }: DashboardHelpSystemProp
         <DialogHeader className="pb-4 sticky top-0 bg-background z-10 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold">
-              Melenco Factoring - Interactive Guide
+              Whizunik Factoring - Interactive Guide
             </DialogTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />

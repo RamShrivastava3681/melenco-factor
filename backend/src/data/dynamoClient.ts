@@ -4,7 +4,12 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 let docClient: DynamoDBDocumentClient | null = null;
 
 export const isDynamoConfigured = (): boolean => {
-  return Boolean(process.env.AWS_REGION && process.env.DYNAMODB_TABLE);
+  return Boolean(
+    process.env.AWS_REGION &&
+    process.env.DYNAMODB_TABLE &&
+    process.env.AWS_ACCESS_KEY_ID &&
+    process.env.AWS_SECRET_ACCESS_KEY
+  );
 };
 
 export const getDynamoTableName = (): string => {
@@ -24,7 +29,11 @@ export const getDynamoClient = (): DynamoDBDocumentClient => {
   }
 
   const client = new DynamoDBClient({
-    region: process.env.AWS_REGION
+    region: process.env.AWS_REGION,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
   });
 
   docClient = DynamoDBDocumentClient.from(client, {

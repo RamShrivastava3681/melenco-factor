@@ -50,6 +50,23 @@ interface TransactionFormData {
   // NOA related fields
   buyerEmail: string;
   sendNOA: boolean;
+  // Receivable side invoice fields
+  isReceivableInvoice?: boolean;
+  buyerInvoice?: {
+    number: string;
+    date: string;
+    blDate: string;
+    amount: number | string;
+    dueDate: string;
+  };
+  supplierInvoice?: {
+    number: string;
+    date: string;
+    blDate: string;
+    amount: number | string;
+    dueDate: string;
+  };
+  relatedTransactionId?: string;
 }
 
 export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialogProps) {
@@ -286,7 +303,23 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
     supportingDocuments: [],
     // NOA related fields
     buyerEmail: '',
-    sendNOA: false
+    sendNOA: false,
+    // Receivable side invoice
+    isReceivableInvoice: false,
+    buyerInvoice: {
+      number: '',
+      date: '',
+      blDate: '',
+      amount: '',
+      dueDate: ''
+    },
+    supplierInvoice: {
+      number: '',
+      date: '',
+      blDate: '',
+      amount: '',
+      dueDate: ''
+    }
   });
 
   // Fetch suppliers and buyers from entities API
@@ -414,7 +447,7 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
     
     // 1. Transaction fee based on payment terms/tenure
     if (transactionFeePercentage > 0) {
-      breakdown.transactionFee = (invoiceAmount * parseFloat(transactionFeePercentage)) / 100;
+      breakdown.transactionFee = (invoiceAmount * transactionFeePercentage) / 100;
       totalFees += breakdown.transactionFee;
       console.log(`Transaction fee: ${transactionFeePercentage}% = $${breakdown.transactionFee}`);
     }
@@ -463,8 +496,22 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
     return { totalFees, reserveAmount, breakdown };
   };
 
-  const handleInputChange = (field: keyof TransactionFormData, value: string | number | boolean) => {
-    const updatedData = { ...formData, [field]: value };
+  const handleInputChange = (field: keyof TransactionFormData | `buyerInvoice.${keyof NonNullable<TransactionFormData['buyerInvoice']>}` | `supplierInvoice.${keyof NonNullable<TransactionFormData['supplierInvoice']>}`, value: string | number | boolean) => {
+    let updatedData: TransactionFormData;
+
+    if (field.startsWith('buyerInvoice.') || field.startsWith('supplierInvoice.')) {
+      const [invoiceType, subField] = field.split('.');
+      const key = invoiceType as 'buyerInvoice' | 'supplierInvoice';
+      updatedData = {
+        ...formData,
+        [key]: {
+          ...(formData[key] || {}),
+          [subField]: value
+        }
+      };
+    } else {
+      updatedData = { ...formData, [field as keyof TransactionFormData]: value };
+    }
     
     // Handle supplier selection
     if (field === 'supplierId') {
@@ -930,7 +977,23 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
         supportingDocuments: [],
         // NOA related fields
         buyerEmail: '',
-        sendNOA: false
+        sendNOA: false,
+        // Receivable side invoice
+        isReceivableInvoice: false,
+        buyerInvoice: {
+          number: '',
+          date: '',
+          blDate: '',
+          amount: '',
+          dueDate: ''
+        },
+        supplierInvoice: {
+          number: '',
+          date: '',
+          blDate: '',
+          amount: '',
+          dueDate: ''
+        }
       });
       setSelectedSupplier(null);
       setSelectedBuyer(null);
@@ -1192,12 +1255,25 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
           {/* Invoice Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Invoice Information</CardTitle>
+              <div className="flex justify-between items-center w-full">
+                <CardTitle className="text-lg">Invoice Information</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isReceivableInvoice"
+                    checked={formData.isReceivableInvoice}
+                    onCheckedChange={(checked) => handleInputChange('isReceivableInvoice', !!checked)}
+                  />
+                  <Label htmlFor="isReceivableInvoice" className="text-sm font-medium">
+                    This is a payable side invoice
+                  </Label>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label htmlFor="invoiceNumber">Invoice Number *</Label>
+            <CardContent className="space-y-6">
+              {!formData.isReceivableInvoice ? (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="invoiceNumber">Invoice Number *</Label>
                   <Input
                     id="invoiceNumber"
                     value={formData.invoiceNumber}
@@ -1229,6 +1305,117 @@ export function AddTransactionDialog({ open, onOpenChange }: AddTransactionDialo
                   />
                 </div>
               </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="p-4 border rounded-lg bg-gray-50/50">
+                    <h4 className="font-medium text-sm mb-4 text-financial-navy">Buyer Invoice (Whizunik to Buyer)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <Label htmlFor="buyerInvoiceNumber">Buyer Invoice Number *</Label>
+                        <Input
+                          id="buyerInvoiceNumber"
+                          value={formData.buyerInvoice?.number}
+                          onChange={(e) => handleInputChange('buyerInvoice.number', e.target.value)}
+                          placeholder="BUYER-INV-001"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="buyerInvoiceAmount">Invoice Amount *</Label>
+                        <Input
+                          id="buyerInvoiceAmount"
+                          type="number"
+                          value={formData.buyerInvoice?.amount}
+                          onChange={(e) => handleInputChange('buyerInvoice.amount', e.target.value)}
+                          placeholder="Enter buyer invoice amount"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="buyerInvoiceDate">Invoice Date *</Label>
+                        <Input
+                          id="buyerInvoiceDate"
+                          type="date"
+                          value={formData.buyerInvoice?.date}
+                          onChange={(e) => handleInputChange('buyerInvoice.date', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="buyerDueDate">Due Date</Label>
+                        <Input
+                          id="buyerDueDate"
+                          type="date"
+                          value={formData.buyerInvoice?.dueDate}
+                          onChange={(e) => handleInputChange('buyerInvoice.dueDate', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="buyerBLDate">BL Date</Label>
+                        <Input
+                          id="buyerBLDate"
+                          type="date"
+                          value={formData.buyerInvoice?.blDate}
+                          onChange={(e) => handleInputChange('buyerInvoice.blDate', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-lg bg-gray-50/50">
+                    <h4 className="font-medium text-sm mb-4 text-financial-navy">Supplier Invoice (Supplier to Whizunik)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <Label htmlFor="supplierInvoiceNumber">Supplier Invoice Number *</Label>
+                        <Input
+                          id="supplierInvoiceNumber"
+                          value={formData.supplierInvoice?.number}
+                          onChange={(e) => handleInputChange('supplierInvoice.number', e.target.value)}
+                          placeholder="SUPP-INV-001"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="supplierInvoiceAmount">Invoice Amount *</Label>
+                        <Input
+                          id="supplierInvoiceAmount"
+                          type="number"
+                          value={formData.supplierInvoice?.amount}
+                          onChange={(e) => handleInputChange('supplierInvoice.amount', e.target.value)}
+                          placeholder="Enter supplier invoice amount"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="supplierInvoiceDate">Invoice Date *</Label>
+                        <Input
+                          id="supplierInvoiceDate"
+                          type="date"
+                          value={formData.supplierInvoice?.date}
+                          onChange={(e) => handleInputChange('supplierInvoice.date', e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="supplierDueDate">Due Date</Label>
+                        <Input
+                          id="supplierDueDate"
+                          type="date"
+                          value={formData.supplierInvoice?.dueDate}
+                          onChange={(e) => handleInputChange('supplierInvoice.dueDate', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="supplierBLDate">BL Date</Label>
+                        <Input
+                          id="supplierBLDate"
+                          type="date"
+                          value={formData.supplierInvoice?.blDate}
+                          onChange={(e) => handleInputChange('supplierInvoice.blDate', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* Date Selection Preference */}
               <div className="border rounded-lg p-4 bg-blue-50/30">

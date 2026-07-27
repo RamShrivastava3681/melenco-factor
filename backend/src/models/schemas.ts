@@ -128,6 +128,22 @@ export interface ITransaction {
   reservePayoutId?: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
+  isReceivableInvoice?: boolean;
+  buyerInvoice?: {
+    number: string;
+    date: string;
+    blDate?: string;
+    amount: number | string;
+    dueDate: string;
+  };
+  supplierInvoice?: {
+    number: string;
+    date: string;
+    blDate?: string;
+    amount: number | string;
+    dueDate: string;
+  };
+  relatedTransactionId?: string;
 }
 
 // NOA Interface

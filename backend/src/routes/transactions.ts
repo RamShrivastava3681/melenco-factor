@@ -216,9 +216,14 @@ router.post('/', upload.array('supportingDocuments', 20), async (req, res) => {
     }
     
     // Check for missing required fields
-    const missingFields = Object.entries(requiredFields).filter(([key, value]) => 
-      value === undefined || value === null || value === ''
-    );
+    const missingFields = Object.entries(requiredFields).filter(([key, value]) => {
+      // If it's a receivable invoice, standard invoiceNumber and invoiceDate are not strictly required here
+      // since we use the buyer/supplier specific fields
+      if (transactionData.isReceivableInvoice && (key === 'invoiceNumber' || key === 'invoiceDate')) {
+        return false;
+      }
+      return value === undefined || value === null || value === '';
+    });
     
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields);
@@ -317,32 +322,7 @@ router.post('/', upload.array('supportingDocuments', 20), async (req, res) => {
       });
     }
     
-    // Create new transaction document
-    const newTransaction: ITransaction = {
-      transactionId,
-      invoiceId,
-      ...transactionData,
-      ...requiredFields,
-      supportingDocuments: supportingDocumentKeys,
-      supportingDocumentNames,
-      transactionFee: parseFloat(transactionData.transactionFee) || 0,
-      processingFee: parseFloat(transactionData.processingFee) || 0,
-      factoringFee: parseFloat(transactionData.factoringFee) || 0,
-      setupFee: parseFloat(transactionData.setupFee) || 0,
-      supplierPaymentTerms: transactionData.supplierPaymentTerms || '',
-      description: transactionData.description || '',
-      sendNOA: Boolean(transactionData.sendNOA),
-      dueDate: calculatedDueDate,
-      status: transactionData.status || 'pending',
-      currency: requestedCurrency,
-      transactionType: transactionData.transactionType || 'factoring'
-    };
-    
-    console.log('Transaction document to save:', JSON.stringify(newTransaction, null, 2));
-
-    const savedTransaction = await createTransaction(newTransaction);
-    console.log(`✅ Transaction saved to DynamoDB: ${savedTransaction.transactionId}, Invoice ID: ${savedTransaction.invoiceId}`);
-
+    // Update real entity limits
     const supplierNewUsed = supplierUsed + invoiceAmount;
     const supplierNewAvailable = Math.max(0, supplierLimit - supplierNewUsed);
     await updateEntity(supplierEntity.entityId, {
@@ -358,22 +338,147 @@ router.post('/', upload.array('supportingDocuments', 20), async (req, res) => {
       utilizedLimit: buyerNewUsed,
       availableLimit: buyerNewAvailable
     });
+    
+    const isReceivableInvoice = Boolean(transactionData.isReceivableInvoice);
 
-    // Send real-time notification
-    broadcastNotification({
-      id: Date.now().toString(),
-      title: 'New Transaction Created',
-      message: `Transaction ${savedTransaction.transactionId} has been created for ${savedTransaction.supplierName}`,
-      type: 'success',
-      timestamp: new Date().toISOString(),
-      actionUrl: '/transactions'
-    });
+    const baseTransaction: ITransaction = {
+      transactionId,
+      invoiceId,
+      ...transactionData,
+      dueDate: calculatedDueDate,
+      invoiceValue: invoiceAmount,
+      invoiceAmount: invoiceAmount,
+      advanceRate: parseFloat(transactionData.advancePercentage) || 80,
+      advanceAmount: advanceAmount,
+      feeAmount: feeAmount,
+      reserveAmount: parseFloat(transactionData.reserveAmount) || 0,
+      netAmount: netAmount,
+      status: 'pending', // Default status
+      supportingDocuments: supportingDocumentKeys,
+      supportingDocumentNames: supportingDocumentNames,
+      currency: requestedCurrency,
+      isReceivableInvoice: isReceivableInvoice,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    res.status(201).json({
-      success: true,
-      message: 'Transaction created successfully',
-      data: savedTransaction
-    });
+    if (isReceivableInvoice) {
+      // Create two transactions: one for buyer, one for supplier
+      const buyerTransaction: ITransaction = {
+        ...baseTransaction,
+        transactionId: `TXN-B-${timestamp.toString().slice(-6)}`,
+        invoiceId: `INV-B-${timestamp.toString().slice(-6)}`,
+        invoiceNumber: baseTransaction.buyerInvoice?.number || baseTransaction.invoiceNumber,
+        invoiceDate: baseTransaction.buyerInvoice?.date || baseTransaction.invoiceDate,
+        blDate: baseTransaction.buyerInvoice?.blDate || baseTransaction.blDate || '',
+        invoiceAmount: parseFloat(baseTransaction.buyerInvoice?.amount as string) || invoiceAmount,
+        dueDate: baseTransaction.buyerInvoice?.dueDate || baseTransaction.dueDate || '',
+        status: 'monitoring', // Buyer transaction goes directly to monitoring
+        relatedTransactionId: `TXN-S-${timestamp.toString().slice(-6)}` // Link to supplier transaction
+      };
+
+      const supplierTransaction: ITransaction = {
+        ...baseTransaction,
+        transactionId: `TXN-S-${timestamp.toString().slice(-6)}`,
+        invoiceId: `INV-S-${timestamp.toString().slice(-6)}`,
+        invoiceNumber: baseTransaction.supplierInvoice?.number || baseTransaction.invoiceNumber,
+        invoiceDate: baseTransaction.supplierInvoice?.date || baseTransaction.invoiceDate,
+        blDate: baseTransaction.supplierInvoice?.blDate || baseTransaction.blDate || '',
+        invoiceAmount: parseFloat(baseTransaction.supplierInvoice?.amount as string) || invoiceAmount,
+        dueDate: baseTransaction.supplierInvoice?.dueDate || baseTransaction.dueDate || '',
+        status: 'pending', // Supplier transaction goes to treasury for funding
+        relatedTransactionId: `TXN-B-${timestamp.toString().slice(-6)}` // Link to buyer transaction
+      };
+
+      const [savedBuyerTransaction, savedSupplierTransaction] = await Promise.all([
+        createTransaction(buyerTransaction),
+        createTransaction(supplierTransaction)
+      ]);
+
+      console.log(`✅ Receivable-side transactions saved to DynamoDB: Buyer-${savedBuyerTransaction.transactionId}, Supplier-${savedSupplierTransaction.transactionId}`);
+      
+      // Update entity limits based on the full invoice amount
+      const supplierNewUsed = supplierUsed + invoiceAmount;
+      const supplierNewAvailable = Math.max(0, supplierLimit - supplierNewUsed);
+      await updateEntity(supplierEntity.entityId, {
+        usedLimit: supplierNewUsed,
+        utilizedLimit: supplierNewUsed,
+        availableLimit: supplierNewAvailable
+      });
+
+      const buyerNewUsed = buyerGlobalUsed + invoiceAmount;
+      const buyerNewAvailable = Math.max(0, buyerGlobalLimit - buyerNewUsed);
+      await updateEntity(buyerEntity.entityId, {
+        usedCredit: buyerNewUsed,
+        utilizedLimit: buyerNewUsed,
+        availableLimit: buyerNewAvailable
+      });
+
+      // Send notifications for both transactions
+      broadcastNotification({
+        id: Date.now().toString() + '-B',
+        title: 'New Buyer Transaction Created',
+        message: `Transaction ${savedBuyerTransaction.transactionId} is now being monitored.`,
+        type: 'success',
+        timestamp: new Date().toISOString(),
+        actionUrl: '/transactions'
+      });
+
+      broadcastNotification({
+        id: Date.now().toString() + '-S',
+        title: 'New Supplier Transaction Created',
+        message: `Transaction ${savedSupplierTransaction.transactionId} is pending funding.`,
+        type: 'info',
+        timestamp: new Date().toISOString(),
+        actionUrl: '/treasury'
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Receivable-side transactions created successfully',
+        data: {
+          buyerTransaction: savedBuyerTransaction,
+          supplierTransaction: savedSupplierTransaction
+        }
+      });
+
+    } else {
+      // Standard single transaction creation
+      const savedTransaction = await createTransaction(baseTransaction);
+      console.log(`✅ Transaction saved to DynamoDB: ${savedTransaction.transactionId}, Invoice ID: ${savedTransaction.invoiceId}`);
+
+      const supplierNewUsed = supplierUsed + invoiceAmount;
+      const supplierNewAvailable = Math.max(0, supplierLimit - supplierNewUsed);
+      await updateEntity(supplierEntity.entityId, {
+        usedLimit: supplierNewUsed,
+        utilizedLimit: supplierNewUsed,
+        availableLimit: supplierNewAvailable
+      });
+
+      const buyerNewUsed = buyerGlobalUsed + invoiceAmount;
+      const buyerNewAvailable = Math.max(0, buyerGlobalLimit - buyerNewUsed);
+      await updateEntity(buyerEntity.entityId, {
+        usedCredit: buyerNewUsed,
+        utilizedLimit: buyerNewUsed,
+        availableLimit: buyerNewAvailable
+      });
+
+      // Send real-time notification
+      broadcastNotification({
+        id: Date.now().toString(),
+        title: 'New Transaction Created',
+        message: `Transaction ${savedTransaction.transactionId} has been created for ${savedTransaction.supplierName}`,
+        type: 'success',
+        timestamp: new Date().toISOString(),
+        actionUrl: '/transactions'
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Transaction created successfully',
+        data: savedTransaction
+      });
+    }
   } catch (error: any) {
     console.error('❌ Create transaction error:', error);
     console.error('Error details:', {

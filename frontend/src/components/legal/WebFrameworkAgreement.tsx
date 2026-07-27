@@ -69,13 +69,13 @@ const DEFINITION_ITEMS = [
   ['Factoring Fee', 'The fee charged for financing and servicing Accounts Receivable as set out in the Transaction Confirmation.'],
   ['Fees', 'Collectively, the Transaction Fee, Factoring Fee, Processing Fee, Set-Up Fee, Late Fee, and any other charges disclosed on the Platform.'],
   ['Initial Purchase Price', 'The portion of the Purchase Price paid to the Seller on the Purchase Date.'],
-  ['Intellectual Property', 'All proprietary rights relating to the Platform, software, branding, and documentation of Melenco.'],
+  ['Intellectual Property', 'All proprietary rights relating to the Platform, software, branding, and documentation of Whizunik.'],
   ['Invoice', 'A valid and undisputed invoice issued by the Seller to a Buyer for goods or services delivered in accordance with the Underlying Relationship.'],
   ['Late Fee', 'A monthly compounding servicing fee applied to amounts outstanding beyond the Due Date.'],
   ['Payment Term', 'The agreed period between the invoice date and the Due Date.'],
-  ['Platform', 'The Melenco digital platform through which receivables purchase transactions are initiated, confirmed, and serviced.'],
+  ['Platform', 'The Whizunik digital platform through which receivables purchase transactions are initiated, confirmed, and serviced.'],
   ['Political Risk', 'Any sovereign, regulatory, or geopolitical event affecting payment or transfer of funds by a Buyer.'],
-  ['Portfolio', 'The aggregate of Accounts Receivable purchased by Melenco from the Seller.'],
+  ['Portfolio', 'The aggregate of Accounts Receivable purchased by Whizunik from the Seller.'],
   ['Processing Fee', 'A fee charged for operational processing, verification, and platform administration.'],
   ['Purchase Price', 'The sum of the Initial Purchase Price and the Deferred Purchase Price for an Account Receivable.'],
   ['Related Rights', 'All rights, remedies, proceeds, and insurance relating to an Account Receivable.'],
@@ -84,9 +84,9 @@ const DEFINITION_ITEMS = [
   ['Security Interest', 'Any pledge, charge, assignment by way of security, or other security interest.'],
   ['Seller Account', 'The verified bank account maintained by the Seller and recorded on the Platform.'],
   ['Set-Up Fee', 'A one-time onboarding fee deducted from the first disbursement.'],
-  ['State of Default', 'Any event defined in this Agreement that gives Melenco the right to suspend purchases or demand repurchase.'],
+  ['State of Default', 'Any event defined in this Agreement that gives Whizunik the right to suspend purchases or demand repurchase.'],
   ['Transaction Fee', 'The fee applied on each purchased Account Receivable.'],
-  ['Transfer', 'The assignment, sale, or transfer of an Account Receivable to Melenco.'],
+  ['Transfer', 'The assignment, sale, or transfer of an Account Receivable to Whizunik.'],
   ['Underlying Relationship', 'The contract, purchase order, or commercial relationship between Seller and Buyer giving rise to the Invoice.'],
 ] as const;
 
@@ -94,16 +94,16 @@ function pageShell(children: React.ReactNode, page: number, total: number, docRe
   return (
     <section className="relative mx-auto min-h-[1122px] w-full max-w-[794px] overflow-hidden rounded-sm border border-slate-300 bg-white px-[52px] pb-[70px] pt-[92px] shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
       <div className="pointer-events-none absolute left-[24%] top-[42%] -rotate-[32deg] select-none text-[54px] font-bold tracking-[0.6em] text-slate-100 opacity-60">
-        Melenco
+        Whizunik
       </div>
       <div className="absolute left-[52px] right-[52px] top-6 flex items-center justify-between border-b border-slate-300 pb-[10px]">
-        <div className="text-[12px] font-bold tracking-[0.1em] text-teal-700">Melenco</div>
+        <div className="text-[12px] font-bold tracking-[0.1em] text-teal-700">Whizunik</div>
         <div className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-900">Framework Agreement</div>
       </div>
       <div className="mb-3 text-[8px] uppercase tracking-[0.15em] text-slate-400">Trade Finance Documentation - Confidential</div>
       <div className="relative z-10 text-[9.7px] leading-[1.58] text-slate-900">{children}</div>
       <div className="absolute bottom-[22px] left-[52px] right-[52px] flex justify-between border-t border-slate-300 pt-2 text-[7.8px] tracking-[0.04em] text-slate-500">
-        <span>Melenco Confidential</span>
+        <span>Whizunik Confidential</span>
         <span>{`Page ${page} of ${total}`}</span>
         <span>{`${docRef} | ${envelopeId}`}</span>
       </div>
@@ -142,7 +142,7 @@ export function WebFrameworkAgreement({ data }: WebFrameworkAgreementProps) {
 
           <div className="mb-[22px] mt-4 border-l-[3px] border-teal-700 bg-slate-50 p-[14px]">
             <p className="mb-2 text-justify">
-              This Framework Agreement ("Agreement") is entered into between Melenco, a company incorporated under the laws of India and engaged in international trade finance, receivables financing, invoice factoring, export finance, and supply chain financing solutions, and the Seller identified below.
+              This Framework Agreement ("Agreement") is entered into between Whizunik, a company incorporated under the laws of India and engaged in international trade finance, receivables financing, invoice factoring, export finance, and supply chain financing solutions, and the Seller identified below.
             </p>
           </div>
 
@@ -170,9 +170,9 @@ export function WebFrameworkAgreement({ data }: WebFrameworkAgreementProps) {
 
           <div className="mb-3 mt-[18px] h-px bg-slate-200" />
           {sectionHeading('1. Scope of Framework Agreement')}
-          {clause('1.1', 'Seller wishes to utilize trade finance solutions offered through the Melenco Platform, including receivables financing, export financing, invoice factoring, seller financing, purchase order financing, and supply chain liquidity solutions.')}
-          {clause('1.2', 'This Agreement governs all receivables purchase transactions executed between Melenco and the Seller and establishes the commercial, legal, operational, technological, and compliance framework applicable to all approved financing transactions.')}
-          {clause('1.3', 'The Seller acknowledges that access to Melenco financing products remains subject to internal underwriting standards, sanctions screening, anti-money laundering checks, portfolio concentration limits, and ongoing risk monitoring procedures.')}
+          {clause('1.1', 'Seller wishes to utilize trade finance solutions offered through the Whizunik Platform, including receivables financing, export financing, invoice factoring, seller financing, purchase order financing, and supply chain liquidity solutions.')}
+          {clause('1.2', 'This Agreement governs all receivables purchase transactions executed between Whizunik and the Seller and establishes the commercial, legal, operational, technological, and compliance framework applicable to all approved financing transactions.')}
+          {clause('1.3', 'The Seller acknowledges that access to Whizunik financing products remains subject to internal underwriting standards, sanctions screening, anti-money laundering checks, portfolio concentration limits, and ongoing risk monitoring procedures.')}
 
           <div className="mb-3 mt-[18px] h-px bg-slate-200" />
           {sectionHeading('2. Payment Terms and Fees')}
@@ -191,12 +191,12 @@ export function WebFrameworkAgreement({ data }: WebFrameworkAgreementProps) {
               </div>
             ))}
           </div>
-          {clause('2.1', 'All Fees disclosed by Melenco shall be deemed commercially confidential and may vary based on Buyer risk profile, jurisdiction, transaction tenor, trade corridor exposure, and portfolio concentration metrics.')}
-          {clause('2.2', 'Melenco reserves the right to revise pricing structures, treasury spreads, processing charges, and operational fees in response to market conditions, funding costs, and regulatory changes.')}
+          {clause('2.1', 'All Fees disclosed by Whizunik shall be deemed commercially confidential and may vary based on Buyer risk profile, jurisdiction, transaction tenor, trade corridor exposure, and portfolio concentration metrics.')}
+          {clause('2.2', 'Whizunik reserves the right to revise pricing structures, treasury spreads, processing charges, and operational fees in response to market conditions, funding costs, and regulatory changes.')}
 
           {sectionHeading('Execution')}
           <div className="mt-[18px] min-h-[150px] rounded-[6px] border border-slate-300 bg-slate-50 p-4">
-            <div className="mb-[7px] text-[10.4px] font-bold text-slate-900">For and on behalf of Melenco</div>
+            <div className="mb-[7px] text-[10.4px] font-bold text-slate-900">For and on behalf of Whizunik</div>
             <div className="mb-[10px] mt-7 border-b border-slate-500" />
             <div>Authorized Signatory</div>
             <div className="mb-[10px] mt-7 border-b border-slate-500" />
@@ -215,7 +215,7 @@ export function WebFrameworkAgreement({ data }: WebFrameworkAgreementProps) {
         <>
           <div className="mb-[10px] text-[15px] font-bold uppercase tracking-[0.1em] text-slate-900">RECEIVABLES PURCHASE TERMS AND CONDITIONS (RPTC)</div>
           <p className="mb-[18px] text-justify text-[9px] leading-[1.5] text-slate-500">
-            These Receivables Purchase Terms and Conditions form an integral part of the Framework Agreement and apply to each receivables purchase transaction executed on the Melenco Platform.
+            These Receivables Purchase Terms and Conditions form an integral part of the Framework Agreement and apply to each receivables purchase transaction executed on the Whizunik Platform.
           </p>
           <div className="border-x border-t border-slate-200">
             {DEFINITION_ITEMS.map(([term, definition]) => (
@@ -235,14 +235,14 @@ export function WebFrameworkAgreement({ data }: WebFrameworkAgreementProps) {
       {pageShell(
         <>
           <h3 className="mb-[14px] mt-[22px] border-b border-slate-300 pb-[6px] text-[15.5px] font-bold text-slate-900">4. Offer</h3>
-          {clause('4.1', 'The Seller may upload Invoices, shipping records, purchase orders, delivery confirmations, trade documentation, customs declarations, inspection certificates, and related supporting materials onto the Platform for the purpose of offering Accounts Receivable for purchase by Melenco.')}
-          {clause('4.2', 'Submission of an Invoice through the Platform constitutes a legally binding offer by the Seller to sell, assign, and transfer the relevant Account Receivable together with all Related Rights to Melenco in accordance with this Agreement.')}
-          {clause('4.3', 'Melenco may review, verify, evaluate, approve, conditionally approve, suspend, or reject any proposed transaction in its sole discretion taking into account underwriting standards, sanctions screening, compliance checks, portfolio concentration limits, and internal credit assessment criteria.')}
+          {clause('4.1', 'The Seller may upload Invoices, shipping records, purchase orders, delivery confirmations, trade documentation, customs declarations, inspection certificates, and related supporting materials onto the Platform for the purpose of offering Accounts Receivable for purchase by Whizunik.')}
+          {clause('4.2', 'Submission of an Invoice through the Platform constitutes a legally binding offer by the Seller to sell, assign, and transfer the relevant Account Receivable together with all Related Rights to Whizunik in accordance with this Agreement.')}
+          {clause('4.3', 'Whizunik may review, verify, evaluate, approve, conditionally approve, suspend, or reject any proposed transaction in its sole discretion taking into account underwriting standards, sanctions screening, compliance checks, portfolio concentration limits, and internal credit assessment criteria.')}
 
           <h3 className="mb-[14px] mt-[22px] border-b border-slate-300 pb-[6px] text-[15.5px] font-bold text-slate-900">5. Sale and Purchase of Accounts Receivable</h3>
-          {clause('5.1', 'Upon acceptance by Melenco, the Seller irrevocably sells, assigns, transfers, conveys, and grants to Melenco all legal and beneficial rights, title, and interest in and to the relevant Accounts Receivable together with all Related Rights.')}
+          {clause('5.1', 'Upon acceptance by Whizunik, the Seller irrevocably sells, assigns, transfers, conveys, and grants to Whizunik all legal and beneficial rights, title, and interest in and to the relevant Accounts Receivable together with all Related Rights.')}
           {clause('5.2', 'The Parties acknowledge and agree that each Transfer is intended to constitute a true sale transaction and not merely the creation of security.')}
-          {clause('5.3', 'The Seller shall promptly notify Melenco upon becoming aware of Buyer disputes, offsets, counterclaims, credit notes, delayed shipments, payment delays, defective goods, sanctions concerns, or any event affecting collectability.')}
+          {clause('5.3', 'The Seller shall promptly notify Whizunik upon becoming aware of Buyer disputes, offsets, counterclaims, credit notes, delayed shipments, payment delays, defective goods, sanctions concerns, or any event affecting collectability.')}
         </>,
         3,
         totalPages,
@@ -253,10 +253,10 @@ export function WebFrameworkAgreement({ data }: WebFrameworkAgreementProps) {
       {pageShell(
         <>
           <h3 className="mb-[14px] mt-[22px] border-b border-slate-300 pb-[6px] text-[15.5px] font-bold text-slate-900">6. Payment of Purchase Price</h3>
-          {clause('6.1', 'Subject to the terms and conditions of this Agreement, Melenco shall disburse the Initial Purchase Price to the Seller Account on the applicable Purchase Date following approval and acceptance of the relevant Account Receivable.')}
-          {clause('6.2', 'The Deferred Purchase Price shall become payable only after Collection of the relevant Account Receivable by Melenco and after deduction of all Fees, adjustments, treasury spreads, legal costs, recovery expenses, taxes, and other applicable amounts.')}
-          {clause('6.3', 'All payments under this Agreement shall be made in the currency of the relevant Invoice unless Melenco agrees otherwise or applicable law requires currency conversion.')}
-          {clause('6.4', 'If any payment relating to a transferred Account Receivable is mistakenly received by the Seller, the Seller shall hold such funds in trust for Melenco and remit the same within two Business Days.')}
+          {clause('6.1', 'Subject to the terms and conditions of this Agreement, Whizunik shall disburse the Initial Purchase Price to the Seller Account on the applicable Purchase Date following approval and acceptance of the relevant Account Receivable.')}
+          {clause('6.2', 'The Deferred Purchase Price shall become payable only after Collection of the relevant Account Receivable by Whizunik and after deduction of all Fees, adjustments, treasury spreads, legal costs, recovery expenses, taxes, and other applicable amounts.')}
+          {clause('6.3', 'All payments under this Agreement shall be made in the currency of the relevant Invoice unless Whizunik agrees otherwise or applicable law requires currency conversion.')}
+          {clause('6.4', 'If any payment relating to a transferred Account Receivable is mistakenly received by the Seller, the Seller shall hold such funds in trust for Whizunik and remit the same within two Business Days.')}
         </>,
         4,
         totalPages,
@@ -316,7 +316,7 @@ export function WebFrameworkAgreement({ data }: WebFrameworkAgreementProps) {
 
           <div className="mt-[22px] flex justify-between gap-6">
             <div className="min-h-[160px] w-[48%] rounded-[4px] border border-slate-200 bg-slate-50 p-4">
-              <div className="mb-6 text-[10px] font-bold text-slate-900">For and on behalf of Melenco</div>
+              <div className="mb-6 text-[10px] font-bold text-slate-900">For and on behalf of Whizunik</div>
               <div className="mb-[6px] mt-6 border-b border-slate-400" />
               <div className="text-[8.5px] text-slate-500">Authorized Signatory</div>
               <div className="mb-[6px] mt-6 border-b border-slate-400" />

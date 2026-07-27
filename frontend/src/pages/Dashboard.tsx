@@ -570,7 +570,7 @@ export default function Dashboard() {
     <div className={cn('min-h-full p-6 transition-colors duration-300', isDark ? 'bg-slate-950 text-slate-100' : 'bg-gradient-to-b from-purple-50 via-blue-50 to-pink-50 text-slate-900')}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Melenco Dashboard</h1>
+          <h1 className="text-2xl font-semibold">Whizunik Dashboard</h1>
           <p className={cn('text-sm', isDark ? 'text-slate-400' : 'text-slate-600')}>Premium trade finance intelligence with live application data</p>
         </div>
         <div className="flex items-center gap-2">
@@ -856,7 +856,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="w-5 h-5 text-indigo-500" />
-              Melenco Insight
+              Whizunik Insight
             </CardTitle>
           </CardHeader>
           <CardContent>

@@ -300,6 +300,10 @@ export default function Transactions() {
                         <p className="font-medium text-financial-navy">{transaction.transactionId}</p>
                         {transaction.invoiceId && (
                           <p className="text-xs text-blue-600">Invoice: {transaction.invoiceId}</p>
+
+                        )}
+                        {transaction.relatedTransactionId && (
+                          <p className="text-xs text-purple-600">Linked: {transaction.relatedTransactionId}</p>
                         )}
                         <p className="text-xs text-muted-foreground capitalize">{transaction.transactionType}</p>
                       </div>

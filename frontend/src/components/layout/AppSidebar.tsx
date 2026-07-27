@@ -33,11 +33,11 @@ export function AppSidebar() {
         <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center p-1.5 shadow-lg">
           <img
             src="/logo-vertical-light (2).png"
-            alt="Melenco Logo"
+            alt="Whizunik Logo"
             className="w-full h-full object-contain"
           />
         </div>
-        <span className="ml-3 text-xl font-semibold tracking-wide">Melenco</span>
+        <span className="ml-3 text-xl font-semibold tracking-wide">Whizunik</span>
       </div>
 
       {/* Navigation */}

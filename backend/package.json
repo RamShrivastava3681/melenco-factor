@@ -4,9 +4,9 @@
   "description": "Whizunik Factoring Backend API",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "dotenv -e ./.env -- nodemon --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "nodemon --exec ts-node src/index.ts",
+    "start": "dotenv -e ./.env -- ts-node src/index.ts",
     "start:prod": "node dist/src/index.js",
     "start:dev": "ts-node src/index.ts",
     "watch": "tsc --watch",

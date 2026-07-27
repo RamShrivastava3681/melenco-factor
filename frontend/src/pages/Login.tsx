@@ -73,11 +73,11 @@ export function Login() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 mb-4 p-2">
             <img 
               src="/logo-vertical-light (2).png" 
-              alt="Melenco Logo" 
+              alt="Whizunik Logo" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Melenco Factoring</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Whizunik Factoring</h1>
           <p className="text-white/70">Sign in to your account</p>
         </div>
 
@@ -163,7 +163,7 @@ export function Login() {
         </Card>
 
         <p className="text-center text-white/60 text-sm">
-          © 2025 Melenco Factoring. All rights reserved.
+          © 2025 Whizunik Factoring. All rights reserved.
         </p>
       </div>
     </div>
